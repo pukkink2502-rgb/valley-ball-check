@@ -54,7 +54,15 @@ function currentSet(){
  return Math.min(cur.best_of,last.status==="complete"&&cur.status==="live"?last.set+1:last.set);
 }
 function isLocked(){return ["approved","pending_approval","void"].includes(cur.status)}
-const courtNow=()=>courtForSet(cur,selectedSet);
+const courtNow=()=>{
+ const side=courtForSet(cur,selectedSet);
+ if(side)return side;
+ // Existing scored matches lack pre-migration side records; do not block them.
+ const played=(cur?.sets||[]).some(s=>Number(s.a)>0||Number(s.b)>0);
+ if(!Array.isArray(cur?.court_sides)||played)
+  return cur?.team_a_id&&cur?.team_b_id?{left:cur.team_a_id,right:cur.team_b_id,legacy:true,decidingSwitched:false}:null;
+ return null;
+};
 const sideTeamId=side=>{const c=courtNow();return c?(side==="a"?c.left:c.right):null};
 const teamIndex=side=>sideTeamId(side)===cur?.team_a_id?0:1;
 const teamName=id=>id===cur?.team_a_id?cur?.team_a:id===cur?.team_b_id?cur?.team_b:"รอเลือกฝั่ง";
@@ -92,6 +100,7 @@ function render(){
  $("offSideInfo").textContent=!Array.isArray(cur.court_sides)?
  "ฐานข้อมูลยังไม่รองรับการบันทึกฝั่งสนาม: ต้องใช้ไฟล์ APPLY_TO_SUPABASE_WHEN_READY.sql ก่อน":
  !court?"ยังไม่ได้เลือกทีมด้านซ้าย":
+ court.legacy?"ข้อมูลเก่า: ยังไม่มีประวัติการเลือกฝั่งเดิม แสดงทีม A/B ตามรูปแบบก่อนหน้า":
  court.decidingSwitched?"เซตตัดสิน: สลับฝั่งแล้วเมื่อถึงแต้ม 8":
  "สนามปัจจุบัน: "+teamName(court.left)+" ด้านซ้าย • "+teamName(court.right)+" ด้านขวา";
  $("offSetScore").textContent=cur.sets_won.join(" : ");
@@ -131,7 +140,7 @@ function render(){
   ready?(isCoinTossSet(selectedSet,cur.best_of)?"เลือกฝ่ายเสิร์ฟ":"เซตนี้ระบบจะกำหนดทีมเริ่มเสิร์ฟอัตโนมัติ")+(cur.sets.some(x=>x.set===selectedSet&&(x.a>0||x.b>0))?"ปัจจุบันสำหรับเซตที่มีคะแนนอยู่แล้ว":"เริ่มต้นเซต "+selectedSet):
   "กรอกและบันทึกตัวจริงทั้งสองทีมก่อน";
  const hasScored=cur.sets.some(s=>s.set===selectedSet&&(s.a>0||s.b>0));
- const manual=isCoinTossSet(selectedSet,cur.best_of);
+ const manual=isCoinTossSet(selectedSet,cur.best_of)||!!courtNow()?.legacy;
  const canChoose=manual&&courtReady()&&cur.can_score&&!isLocked()&&ready&&selectedSet===currentSet()&&(!hasScored||!server);
  $("offStartServeA").hidden=!manual;$("offStartServeB").hidden=!manual;
  $("offStartServeA").disabled=!canChoose;$("offStartServeB").disabled=!canChoose;
@@ -198,7 +207,7 @@ $("offTimeoutA").onclick=()=>command("timeout",{team:teamIndex("a")});$("offTime
 
 async function beginService(side){
  if(!cur||busy)return;
- if(!isCoinTossSet(selectedSet,cur.best_of))return notify("เซตนี้เริ่มเสิร์ฟอัตโนมัติ","error");
+ if(!isCoinTossSet(selectedSet,cur.best_of)&&!courtNow()?.legacy)return notify("เซตนี้เริ่มเสิร์ฟอัตโนมัติ","error");
  if(!courtReady())return notify("กรุณาเลือกทีมฝั่งซ้ายก่อน","error");
  const team=side==="A"?sideTeamId("a"):sideTeamId("b");
  busy=true;
@@ -219,7 +228,7 @@ $("offSideSave").onclick=async()=>{
 };
 async function ensureAutomaticSetService(){
  if(!cur||autoServiceBusy||!cur.can_score||isLocked()||selectedSet!==currentSet())return;
- if(isCoinTossSet(selectedSet,cur.best_of)||!courtReady()||cur.services?.some(x=>x.set===selectedSet))return;
+ if(isCoinTossSet(selectedSet,cur.best_of)||courtNow()?.legacy||!courtReady()||cur.services?.some(x=>x.set===selectedSet))return;
  const ready=cur.lineups.filter(x=>x.set===selectedSet&&[cur.team_a_id,cur.team_b_id].includes(x.team_id)).length===2;
  if(!ready)return;const first=automaticFirstServer(cur,selectedSet);
  if(!first){$("offServeInfo").textContent="ไม่พบทีมเริ่มเสิร์ฟของเซตก่อน";return}
