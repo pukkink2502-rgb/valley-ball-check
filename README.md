@@ -1,39 +1,52 @@
-# Valley Ball Check — Development v0.1
+# Valley Ball Check
 
-Development branch: `development/v0.1`.
+An integrated Thai-language volleyball tournament management website.
 
-## Preview deployment
+**Web:** https://valley-ball-check.vercel.app
 
-- Vercel preview: https://valley-ball-check-eqb4v1x8e-pukkink.vercel.app
-- GitHub commit of functional page: `75507faedd36b30944ab262875f28703f8195197`.
-- Git integration auto-builds new previews when this branch changes.
-- Vercel Deployment Protection / SSO may require signing in as an authorized project member.
-- This is **not** the production website. `main` is unchanged.
+## Available modules
 
-## Functional local-only MVP
+- **Dashboard** — quick entry to all modules.
+- **Quick Scoreboard (local)** — BO3/BO5 scoreboard with win-by-two rule, set handling, undo, screen swap, fullscreen and browser autosave.
+- **Scoreboard Online** — shared Guest game with separate Viewer / Controller / Recovery links. Server-authorized score changes and version/revision conflict protection. Viewers poll about every 3.5 seconds; links expire per retention policy.
+- **Tournament Builder (local draft)** — split teams into groups A–D and generate round-robin matchups; CSV export.
+- **Tournament Manager (cloud)** — Supabase Email/Password Auth, create tournaments with team registrations, pools and scheduled fixture drafts.
+- **Official Scoresheet** — official-event log, scoring, rosters, team six-player lineups, substitutions, rotation events, timeouts, Libero audit entries, sanctions and a separate approver role. Results are not considered official until independently approved.
+- **Position Check** — manually entered 6-position coordinates checked for relative lineup order.
+- **Live Draw** — server-generated random draw, persisted draw order and an audit ticket per pick. Not yet a public commit/reveal lottery.
+- **Graphic Studio** — tournament-backed fixture/result/team poster templates, logo upload, themes, 9:16 and 1:1 outputs, PNG/PDF export, save/load poster configuration.
+- **Public Program / Standings** — public view for published tournaments, standings calculated from approved matches, schedules, CSV and print-to-PDF. Court/time scheduling uses estimated match durations, court collision and team rest checks.
 
-- Responsive dashboard and navigation in Thai.
-- Best-of-3 (25/25/15) and best-of-5 (25/25/25/25/15), 2-point margin.
-- Manual score controls, set/match detection, undo, team naming, display-side swap, deciding-set side-switch prompt, fullscreen.
-- Browser-local autosave using `localStorage` (no cross-device synchronization).
-- Tournament draft grouping (1–4 groups, 2–64 teams), round-robin fixtures, CSV export with spreadsheet-injection mitigation.
+## Accounts and approvals
 
-## Not implemented yet
+Organizer creates a tournament. To score official games, a designated `scorekeeper` uses Official Scoresheet; the organizer also has scoring access. For the result to become approved, the organizer must assign another signed-up account the **approver** role; this must be a different person than the user who first scored the match. Owners can assign roles by email in the Official Scoresheet.
 
-- Cloud Guest sessions, live viewer/control/recovery links, server-side retention and rate limits.
-- Official FIVB scoresheet, Libero/substitution/rotation rules, approvals, official standings.
-- Verified Live Draw, multi-court scheduling, audit trail, PDF/graphic editor.
-- Supabase integration/authentication and production release.
+## Safety model
 
-Do not rely on this MVP for official tournament records: the scores are stored in the current browser only and are lost if local storage is cleared. Browser storage is not the 30-day Guest retention system described in the specification.
+- Database access uses Supabase Auth, RLS, per-tournament checks and locked server transactions.
+- Sensitive definer routines are in a private non-API schema; public-facing RPC wrappers execute with invoker privileges.
+- Public tournament access returns only published tournament names, teams and fixture/result data.
+- Guest controller/recovery capabilities are separately generated random tokens; hashes remain on the server.
+- Automatic database guest retention cleanup uses Supabase Cron.
+- Browser JavaScript contains only a publishable Supabase key, never a service secret.
 
-## Supabase
+## Limitations and issues under development
 
-Dedicated project ref: `rwnvlxwdorsrxjuepcxp` (not the unrelated preorder project). Five foundation tables have been created with RLS: `profiles`, `tournaments`, `teams`, `tournament_teams`, `tournament_members`. The MVP frontend does not access them.
+This is a **public functional release for hands-on verification**, not an assertion that every advanced rule interpretation is certified. Position checks require manual coordinates, Libero replacements are logged but the complete sequence and eligibility engine is not yet implemented, and the substitution pilot/custom profiles require further rule-validation tests. The draw stores a server-issued audit log but does not yet implement public commit/reveal proofs.
 
-## Release checklist
+**Known fixture ordering issue (intentionally NOT changed yet):** Round-robin pairing generation may list the same team's matches consecutively. Pair completeness is correct, but pair *ordering* is not fair/suitable and needs a future scheduler/round-robin ordering fix. The product owner explicitly asked to park this issue while shipping the entire suite. Scheduling validators do **not** silently reorder the existing fixtures.
 
-1. Run real-browser usability tests on Android and desktop.
-2. Verify preview access and static asset loading.
-3. Build secure Guest backend with scoped permissions, tokens, auditability and expiry.
-4. Complete acceptance tests and authorise production release. Never merge to `main` without validation.
+Production manual smoke checks are still required for all workflows and on different mobile devices. GitHub CI validates JavaScript syntax and the volleyball standings/unit rules.
+
+Supabase Auth Security Advisor may require enabling leaked password protection in the Supabase dashboard; see the project Security Advisor. Do not mistake green deployment status for full mobile/browser acceptance.
+
+## Development
+
+Repository: `pukkink2502-rgb/valley-ball-check`
+
+- `lib/volleyball-rules.mjs`: reusable rules and standings.
+- `tests/rules.test.mjs`: automated rule-regression tests.
+- `supabase/functions/guest-score/index.ts`: Guest Score API source.
+- UI: `index.html` + `online.js`, `tournament-manager.js`, `official-ui.js`, `position-check.js`, `draw-ui.js`, `graphics-ui.js`, `public-standings-ui.js` and `suite-core.js`.
+
+Production branch is `main`; development branch is `development/v0.1`.
