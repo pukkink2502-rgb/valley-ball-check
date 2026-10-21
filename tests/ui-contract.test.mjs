@@ -99,3 +99,14 @@ test('scorer never labels left physical-side points with hardcoded team A',()=>{
  assert.ok(!official.includes('cur.team_a+" "+$("offPoints0").textContent'),"stale toast paired canonical team A with left points");
  assert.ok(!official.includes('sideTeamId(side)===cur?.team_a_id?0:1'),"missing side must not score team B");
 });
+
+test('owners can delete scored and published tournaments with explicit confirmation',()=>{
+ assert.ok(manager.includes('id=\\\"mgrDeleteTournament\\\">ลบรายการทั้งหมด'));
+ assert.ok(manager.includes('delete_tournament_draft'));
+ assert.ok(manager.includes('แม้จะเริ่มแข่งขันหรือมีผลคะแนนแล้ว'));
+ assert.ok(manager.includes('คู่แข่งขัน คะแนนทุกเซต สกอร์ชีต'));
+ assert.ok(manager.includes('result?.deleted'));
+ assert.ok(manager.includes('button.disabled=true'));
+ assert.ok(manager.includes('finally{button.disabled=false}'));
+ assert.ok(existsSync(new URL('../ALLOW_DELETE_ANY_TOURNAMENT.sql',import.meta.url)));
+});
