@@ -65,6 +65,7 @@ function render(){
  const goal=(sets.length===session.best_of-1)?15:25;
  const hasWinner=!ended&&(Math.max(...scores)>=goal&&Math.abs(scores[0]-scores[1])>=2);
  controls.hidden=active.kind!=="c"||ended;
+ document.querySelectorAll("#onlineBoard .counter").forEach(node=>{node.hidden=active.kind!=="c"||ended;});
  $("onlineConfirmSet").hidden=!hasWinner;
  $("onlineSwitchDone").hidden=!(sets.length===session.best_of-1 && Math.max(...scores)>=8 && !s.switched);
  $("onlineSwitchLater").hidden=!!s.seen8||$("onlineSwitchDone").hidden;
