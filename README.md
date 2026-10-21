@@ -1,25 +1,52 @@
 # Valley Ball Check
 
-หน้าเว็บไซต์เริ่มต้น (static HTML) สำหรับยืนยันการเชื่อมต่อ GitHub → Vercel โดยยังไม่สร้างฐานข้อมูลหรือเปิดใช้ฟังก์ชันการแข่งขันจริง
+An integrated Thai-language volleyball tournament management website.
 
-## Supabase ที่อนุญาตสำหรับระบบนี้
+**Web:** https://valley-ball-check.vercel.app
 
-- Project ref: `rwnvlxwdorsrxjuepcxp`
-- API URL: `https://rwnvlxwdorsrxjuepcxp.supabase.co`
-- แยกจาก BNK School OS และ Volleyball Jersey Pre-order อย่างเด็ดขาด
+## Available modules
 
-ตอนนี้เว็บไซต์ **ยังไม่มีการเรียก API ฐานข้อมูล** หรือใช้ publishable/secret key ใด ๆ การพัฒนาฐานข้อมูลและสิทธิ์ RLS จะทำเมื่อกำหนดความต้องการของระบบจริงแล้วเท่านั้น
+- **Dashboard** — quick entry to all modules.
+- **Quick Scoreboard (local)** — BO3/BO5 scoreboard with win-by-two rule, set handling, undo, screen swap, fullscreen and browser autosave.
+- **Scoreboard Online** — shared Guest game with separate Viewer / Controller / Recovery links. Server-authorized score changes and version/revision conflict protection. Viewers poll about every 3.5 seconds; links expire per retention policy.
+- **Tournament Builder (local draft)** — split teams into groups A–D and generate round-robin matchups; CSV export.
+- **Tournament Manager (cloud)** — Supabase Email/Password Auth, create tournaments with team registrations, pools and scheduled fixture drafts.
+- **Official Scoresheet** — official-event log, scoring, rosters, team six-player lineups, substitutions, rotation events, timeouts, Libero audit entries, sanctions and a separate approver role. Results are not considered official until independently approved.
+- **Position Check** — manually entered 6-position coordinates checked for relative lineup order.
+- **Live Draw** — server-generated random draw, persisted draw order and an audit ticket per pick. Not yet a public commit/reveal lottery.
+- **Graphic Studio** — tournament-backed fixture/result/team poster templates, logo upload, themes, 9:16 and 1:1 outputs, PNG/PDF export, save/load poster configuration.
+- **Public Program / Standings** — public view for published tournaments, standings calculated from approved matches, schedules, CSV and print-to-PDF. Court/time scheduling uses estimated match durations, court collision and team rest checks.
 
-## วิธีเริ่มใช้
+## Accounts and approvals
 
-1. ใน GitHub Repository `pukkink2502-rgb/valley-ball-check` คลิก **Add file → Upload files** แล้วอัปโหลด `index.html` และ `README.md` ไว้ที่ root ของ repository
-2. กด **Commit changes** ไปที่สาขา `main`
-3. ไปที่ **Vercel → valley-ball-check → Settings → Git** แล้วเชื่อม Repository `pukkink2502-rgb/valley-ball-check` (หากไม่ได้รับสิทธิ์ ให้ตรวจ GitHub App permissions ในบัญชี GitHub)
-4. ใช้ Framework Preset `Other` และ Root Directory `/` (ไม่มี build command และไม่มี output directory)
-5. หลังเชื่อม Git แล้วจึง Deploy โปรเจกต์; ต้องเห็นหน้าเริ่มต้นที่ `valley-ball-check.vercel.app`
+Organizer creates a tournament. To score official games, a designated `scorekeeper` uses Official Scoresheet; the organizer also has scoring access. For the result to become approved, the organizer must assign another signed-up account the **approver** role; this must be a different person than the user who first scored the match. Owners can assign roles by email in the Official Scoresheet.
 
-## ข้อควรระวัง
+## Safety model
 
-- อย่าอัปโหลด `.env.local`, `sb_secret_` หรือ `service_role` keys ไปบน GitHub
-- ก่อนเปิดระบบฐานข้อมูลจริง ต้องกำหนด Auth/RLS และสิทธิ์ตารางให้รัดกุม
-- โปรเจกต์ Vercel ที่มีอยู่แล้วไม่จำเป็นต้องสร้างซ้ำ
+- Database access uses Supabase Auth, RLS, per-tournament checks and locked server transactions.
+- Sensitive definer routines are in a private non-API schema; public-facing RPC wrappers execute with invoker privileges.
+- Public tournament access returns only published tournament names, teams and fixture/result data.
+- Guest controller/recovery capabilities are separately generated random tokens; hashes remain on the server.
+- Automatic database guest retention cleanup uses Supabase Cron.
+- Browser JavaScript contains only a publishable Supabase key, never a service secret.
+
+## Limitations and issues under development
+
+This is a **public functional release for hands-on verification**, not an assertion that every advanced rule interpretation is certified. Position checks require manual coordinates, Libero replacements are logged but the complete sequence and eligibility engine is not yet implemented, and the substitution pilot/custom profiles require further rule-validation tests. The draw stores a server-issued audit log but does not yet implement public commit/reveal proofs.
+
+**Known fixture ordering issue (intentionally NOT changed yet):** Round-robin pairing generation may list the same team's matches consecutively. Pair completeness is correct, but pair *ordering* is not fair/suitable and needs a future scheduler/round-robin ordering fix. The product owner explicitly asked to park this issue while shipping the entire suite. Scheduling validators do **not** silently reorder the existing fixtures.
+
+Production manual smoke checks are still required for all workflows and on different mobile devices. GitHub CI validates JavaScript syntax and the volleyball standings/unit rules.
+
+Supabase Auth Security Advisor may require enabling leaked password protection in the Supabase dashboard; see the project Security Advisor. Do not mistake green deployment status for full mobile/browser acceptance.
+
+## Development
+
+Repository: `pukkink2502-rgb/valley-ball-check`
+
+- `lib/volleyball-rules.mjs`: reusable rules and standings.
+- `tests/rules.test.mjs`: automated rule-regression tests.
+- `supabase/functions/guest-score/index.ts`: Guest Score API source.
+- UI: `index.html` + `online.js`, `tournament-manager.js`, `official-ui.js`, `position-check.js`, `draw-ui.js`, `graphics-ui.js`, `public-standings-ui.js` and `suite-core.js`.
+
+Production branch is `main`; development branch is `development/v0.1`.

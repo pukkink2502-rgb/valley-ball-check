@@ -1,60 +1,139 @@
 <!doctype html>
-<html lang="th">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex, nofollow">
-  <meta name="theme-color" content="#0b1324">
-  <meta name="description" content="Valley Ball Check — พื้นที่เริ่มต้นสำหรับพัฒนาระบบวอลเลย์บอล">
-  <title>Valley Ball Check | ระบบกำลังพัฒนา</title>
-  <style>
-    :root { color-scheme: dark; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; color: #e9eef8; background: radial-gradient(ellipse at 75% 0, #21447a 0%, transparent 40%), #0b1324; }
-    .wrap { max-width: 1040px; margin: auto; padding: 28px 22px 50px; }
-    header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-    .brand { display: flex; align-items: center; gap: 13px; font-size: 14px; font-weight: 800; letter-spacing: .045em; }
-    .ball { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: #fdbb4c; color: #182238; font-size: 27px; }
-    .tag { display: inline-block; border: 1px solid #536780; background: #1b2c45; border-radius: 100px; padding: 8px 14px; color: #cce0fa; font-size: 12px; }
-    main { padding: 75px 0 35px; }
-    .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .2em; color: #fdbb4c; }
-    h1 { max-width: 800px; margin: 15px 0 18px; font-size: clamp(40px, 8vw, 76px); line-height: 1.08; letter-spacing: -.045em; }
-    h1 span { color: #fdbb4c; }
-    .lead { max-width: 720px; font-size: clamp(16px, 2.4vw, 19px); line-height: 1.85; color: #c0cee2; }
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 45px 0 25px; }
-    .card { border: 1px solid #314763; border-radius: 18px; padding: 24px; background: #15243b; }
-    .card strong { display: block; font-size: 20px; margin: 12px 0; }
-    .card p { color: #bdcee2; font-size: 15px; line-height: 1.7; margin: 0; }
-    .symbol { font-size: 28px; }
-    .status { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 15px; align-items: center; border: 1px solid #415674; border-radius: 16px; padding: 22px; background: #1d2c43; }
-    .status b { display: block; margin-bottom: 6px; }
-    .status small { color: #b8cadf; overflow-wrap: anywhere; }
-    .mark { color: #a4f6c0; font-weight: 800; }
-    footer { padding-top: 46px; color: #829ab7; font-size: 13px; }
-    @media (max-width: 700px) { main { padding-top: 52px; } .grid { grid-template-columns: 1fr; } .status { align-items: flex-start; } }
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <header>
-      <div class="brand"><div class="ball" aria-hidden="true">🏐</div> VALLEY BALL CHECK</div>
-      <span class="tag">INITIAL SETUP</span>
-    </header>
-    <main>
-      <div class="eyebrow">NEW PROJECT · 2026</div>
-      <h1>พร้อมเริ่มสร้าง<br><span>ระบบวอลเลย์บอล</span></h1>
-      <p class="lead">นี่คือหน้าเริ่มต้นสำหรับทดสอบการเชื่อมต่อ GitHub กับ Vercel เว็บไซต์ยังอยู่ระหว่างพัฒนา และยังไม่มีข้อมูลการแข่งขันหรือฟังก์ชันฐานข้อมูลเปิดใช้งาน</p>
-      <div class="grid">
-        <section class="card"><div class="symbol" aria-hidden="true">🏆</div><strong>การแข่งขัน</strong><p>พื้นที่สำหรับพัฒนาระบบรายการแข่งขันและตารางแข่งในขั้นตอนถัดไป</p></section>
-        <section class="card"><div class="symbol" aria-hidden="true">👥</div><strong>ทีมและผู้เล่น</strong><p>เตรียมออกแบบข้อมูลทีม รายชื่อนักกีฬา และสิทธิ์ผู้ดูแล</p></section>
-        <section class="card"><div class="symbol" aria-hidden="true">📊</div><strong>ผลการแข่งขัน</strong><p>เตรียมระบบบันทึกผลและรายงาน หลังยืนยันรูปแบบการใช้งานจริง</p></section>
-      </div>
-      <section class="status" aria-label="สถานะระบบ">
-        <div><b>ฐานข้อมูลเป้าหมาย (ยังไม่เริ่มอ่านหรือเขียน)</b><small>Supabase: rwnvlxwdorsrxjuepcxp</small></div>
-        <div class="mark">✓ แยกจากสองโปรเจกต์เดิม</div>
-      </section>
-    </main>
-    <footer>Valley Ball Check • GitHub → Vercel • Development starter, not a production sports system</footer>
-  </div>
-</body>
-</html>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e172b"><meta name="description" content="Valley Ball Check — Quick Scoreboard และโปรแกรมการแข่งขัน">
+<title>Valley Ball Check | Volleyball Tournament Manager</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:dark;--bg:#0b1323;--panel:#15243b;--panel2:#1a2c47;--border:#344761;--text:#f4f7ff;--muted:#a9bacd;--gold:#ffcc71;--green:#64e6b7}
+*{box-sizing:border-box}[hidden]{display:none!important}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 75% -10%,#1c3763 0%,transparent 35%),var(--bg);color:var(--text)}
+button,input,textarea,select{font:inherit}button{cursor:pointer}input,textarea,select{background:#101d31;border:1px solid var(--border);color:var(--text);padding:12px;border-radius:12px;min-width:0}input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+a{color:var(--gold)}.app{display:grid;grid-template-columns:248px 1fr;min-height:100vh}.side{padding:24px 15px;background:#101a2e;border-right:1px solid var(--border)}.brand{font-weight:900;letter-spacing:.07em;font-size:17px;margin-bottom:8px}.brand b{color:var(--gold)}.brand i{font-style:normal;border-radius:11px;background:var(--gold);color:#152137;padding:8px;margin-right:8px}.small{font-size:12px;color:var(--muted)}.nav{display:grid;gap:7px;margin:32px 0}.nav button{width:100%;text-align:left;padding:14px;border:0;border-radius:13px;background:transparent;color:var(--muted)}.nav button.active,.nav button:hover{background:#233652;color:white}.side-note{font-size:12px;line-height:1.7;color:var(--muted);border:1px solid var(--border);border-radius:12px;padding:14px}.content{min-width:0;padding:24px clamp(16px,4vw,56px) 50px;max-width:1510px;width:100%;margin:auto}.header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:24px;border-bottom:1px solid var(--border)}.tag{color:var(--green);font-size:12px;font-weight:800;letter-spacing:.08em}.page{display:none;padding-top:28px}.page.active{display:block}h1{font-size:clamp(28px,4.5vw,52px);letter-spacing:-.045em;margin:10px 0}h2{font-size:24px}p{line-height:1.75;color:var(--muted)}.eyebrow{font-size:12px;letter-spacing:.18em;color:var(--gold);font-weight:800}.notice{margin:18px 0 28px;padding:14px 18px;background:#34314a;border:1px solid #77699d;border-radius:13px;color:#f3e7d6;font-size:14px;line-height:1.7}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.card{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px}.card h3{margin-top:5px}.stat{color:var(--gold);font-size:35px;font-weight:900;margin:12px 0}.muted{color:var(--muted);font-size:13px}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.btn{border:1px solid var(--border);border-radius:12px;padding:12px 17px;background:#263c5d;color:white;font-weight:750}.btn:hover{filter:brightness(1.15)}.btn.primary{background:var(--gold);color:#121d2d;border-color:var(--gold)}.btn.danger{background:#532b38}.btn:disabled{opacity:.4;cursor:not-allowed}.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}.formrow{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.formrow label{display:flex;flex-direction:column;gap:7px;flex:1;min-width:130px;color:var(--muted);font-size:13px}.scoreboard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-top:18px}.team{background:linear-gradient(145deg,#1c3151,#142239);border:1px solid #3e587b;border-radius:20px;padding:20px;text-align:center}.team .points{font-size:clamp(75px,13vw,155px);font-weight:900;letter-spacing:-.09em;font-variant-numeric:tabular-nums;line-height:1.2;margin:10px 0}.team input{max-width:100%;width:100%;text-align:center;font-weight:800;font-size:20px}.team .counter{display:flex;justify-content:center;gap:10px}.team .counter .btn{font-size:26px;min-width:75px}.setscore{font-size:16px;color:var(--gold);font-weight:800}.result{padding:16px;background:#1c3b44;color:#c5ffe0;border-radius:14px;margin-top:14px}.reminder{padding:15px;border:1px solid #d3a45e;background:#514024;border-radius:13px;margin:15px 0}.tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:16px}table{border-collapse:collapse;width:100%;min-width:480px}th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--border)}th{background:#21344f;color:var(--gold);font-size:12px}td{font-size:14px}tr:last-child td{border-bottom:0}textarea{width:100%;min-height:190px;line-height:1.7}.placeholder{border:1px dashed #577192;border-radius:16px;padding:30px;background:#14223a}.footer{margin-top:40px;color:var(--muted);font-size:12px}@media(max-width:850px){.app{display:block}.side{padding:14px;border-right:0;border-bottom:1px solid var(--border)}.nav{display:flex;overflow-x:auto;margin:16px 0 0;gap:5px}.nav button{white-space:nowrap;width:auto;padding:10px 14px}.side-note{display:none}.content{padding:17px 15px 35px}.grid{grid-template-columns:1fr}.two{grid-template-columns:1fr}}@media(max-width:470px){.scoreboard{gap:8px}.team{padding:10px}.team .counter .btn{min-width:47px;padding:8px}.team input{font-size:15px;padding:8px}.team .points{font-size:68px}.card{padding:16px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+@media print{.side,.header,.notice,.actions,button,input,textarea,select,.footer{display:none!important}body{background:#fff;color:#000}.content{padding:0}.page{display:none!important}#public.page{display:block!important}#pubOwner{display:none!important}.card{border:0;background:#fff;color:#000}td,th{color:#000;border-color:#888}.tablewrap{overflow:visible}table{min-width:0;font-size:10px}} </style></head>
+<body><div class="app"><aside class="side"><div class="brand"><i>🏐</i>VALLEY <b>BALL</b> CHECK</div><div class="small">SPORTS CONTROL · V0.1</div>
+<nav class="nav" aria-label="เมนู"><button class="active" data-page="home">▦ ภาพรวม</button><button data-page="scoreboard">◉ Quick Scoreboard</button><button data-page="online">☁ Scoreboard Online</button><button data-page="tournament">▤ Tournament Builder</button><button data-page="manager">☁ จัดการแข่งขันออนไลน์</button><button data-page="scoresheet">⌗ Official Scoresheet</button><button data-page="draw">✺ Live Draw</button><button data-page="graphics">▧ Graphic Studio</button></nav>
+<div class="side-note">VALLEY BALL CHECK<br>Quick Scoreboard (Local), Guest Score Online, Tournaments, Official Scoresheet, Live Draw, Graphic Studio</div></aside>
+<main class="content"><div class="header"><strong id="location">VALLEY BALL CHECK / ภาพรวม</strong><span class="tag">● ONLINE + LOCAL</span></div>
+<div class="notice"><b>เวอร์ชันพัฒนาทดลอง:</b> Quick Scoreboard และตัวสร้างโปรแกรมร่างใช้งานบนเครื่องนี้ได้ Quick Scoreboard แบบ Local ยังเก็บในเครื่อง แต่มีระบบ Scoreboard Online และรายการแข่งขันที่เชื่อม Supabase แล้ว</div>
+<section class="page active" id="home"><div class="eyebrow">WELCOME TO YOUR ARENA</div><h1>ศูนย์ควบคุมการแข่งขัน<span style="color:var(--gold)">.</span></h1><p>เริ่มบันทึกคะแนนหรือสร้างโปรแกรมรอบแบ่งสายได้ทันที</p>
+<div class="grid"><div class="card"><div class="muted">สถานะสกอร์บอร์ด</div><div class="stat" id="homeScore">0 : 0</div><div class="small">คะแนนเซตล่าสุด</div></div><div class="card"><div class="muted">ทีมในร่างการแข่งขัน</div><div class="stat" id="homeTeams">0</div><div class="small">ข้อมูลในเบราว์เซอร์</div></div><div class="card"><div class="muted">คู่แข่งขันรอบแบ่งสาย</div><div class="stat" id="homeGames">0</div><div class="small">ร่างโปรแกรม</div></div></div>
+<div class="actions"><button class="btn primary" data-page="scoreboard">เปิด Quick Scoreboard →</button><button class="btn" data-page="tournament">สร้างโปรแกรมแข่งขัน →</button></div>
+<h2>ระบบที่กำลังพัฒนา</h2><div class="grid"><div class="card"><h3>Official Scoresheet</h3><p>FIVB Rule Engine, Libero, Rotation, การรับรองผล</p></div><div class="card"><h3>Live Draw</h3><p>จับสลากด้วยระบบสุ่มที่ตรวจสอบย้อนกลับได้</p></div><div class="card"><h3>Graphic Studio</h3><p>สร้างกราฟิกโปรแกรมและผลการแข่งขัน</p></div></div></section>
+<section class="page" id="scoreboard"><div class="eyebrow">SCORE CONTROL</div><h1>Quick Scoreboard</h1><p>นับคะแนน Best of 3 / Best of 5 ชนะห่างอย่างน้อย 2 แต้ม พร้อม Undo และสลับด้านแสดงผล</p>
+<div class="card"><div class="formrow"><label>รูปแบบการแข่งขัน<select id="mode"><option value="3">2 ใน 3 เซต (25/25/15)</option><option value="5">3 ใน 5 เซต (25/25/25/25/15)</option></select></label><label>เซตปัจจุบัน<div class="stat" style="font-size:22px" id="setNo">1</div></label><label>เซตที่ชนะ<div class="stat" style="font-size:22px" id="setsWon">0 – 0</div></label></div></div>
+<div class="scoreboard" id="scoreGrid"><div class="team"><input id="team0" maxlength="60" aria-label="ชื่อทีม A"><div class="points" id="points0">0</div><div class="setscore" id="wins0">ชนะ 0 เซต</div><div class="counter"><button class="btn" data-change="0,-1" aria-label="ลดแต้มทีม A">−</button><button class="btn primary" data-change="0,1" aria-label="เพิ่มแต้มทีม A">+</button></div></div>
+<div class="team"><input id="team1" maxlength="60" aria-label="ชื่อทีม B"><div class="points" id="points1">0</div><div class="setscore" id="wins1">ชนะ 0 เซต</div><div class="counter"><button class="btn" data-change="1,-1" aria-label="ลดแต้มทีม B">−</button><button class="btn primary" data-change="1,1" aria-label="เพิ่มแต้มทีม B">+</button></div></div></div>
+<div class="reminder" id="switchNotice" hidden><b>ถึง 8 คะแนนในเซตตัดสินแล้ว</b><p style="color:#ffdfac">ตามค่าเริ่มต้นให้สลับฝั่งเมื่อทีมนำถึง 8 คะแนน</p><div class="actions"><button class="btn primary" id="switchDone">สลับฝั่งแล้ว</button><button class="btn" id="switchLater">ยังไม่สลับ</button></div></div>
+<div class="result" id="winnerNotice" hidden></div><div class="actions"><button class="btn primary" id="nextSet" hidden>ยืนยันเซต / เซตต่อไป</button><button class="btn" id="swapSides">⇄ สลับด้านแสดงผล</button><button class="btn" id="undoScore">↶ ย้อนกลับ</button><button class="btn" id="fullscreen">⛶ เต็มจอ</button><button class="btn danger" id="resetScore">เกมใหม่</button></div>
+<div class="card" style="margin-top:17px"><b>ประวัติเซต</b><div id="historySets" class="muted" style="margin-top:12px">ยังไม่มีเซตจบ</div></div></section>
+<section class="page" id="tournament"><div class="eyebrow">TOURNAMENT PLANNER</div><h1>Tournament Builder</h1><p>สร้างร่างคู่แข่งขันแบบพบกันหมดภายในสาย A–D ยังไม่ใช่ระบบจับสลากหรือจัดตารางที่รับรองระยะพัก</p>
+<div class="two"><div class="card"><label for="teamList">รายชื่อทีม (1 ทีมต่อบรรทัด)</label><textarea id="teamList" placeholder="หมู่ 1&#10;หมู่ 2&#10;หมู่ 3&#10;หมู่ 4"></textarea><div class="formrow"><label>จำนวนสาย<select id="groupCount"><option value="1">1 สาย</option><option value="2" selected>2 สาย</option><option value="3">3 สาย</option><option value="4">4 สาย</option></select></label></div><div class="actions"><button class="btn primary" id="makeFixtures">สร้างคู่แข่งขัน</button><button class="btn" id="exportCsv">ดาวน์โหลด CSV</button></div><p id="draftMessage" role="status"></p></div>
+<div class="card"><b>สรุปร่างการแข่งขัน</b><p>ระบบแบ่งสายจากลำดับรายชื่อที่ป้อน และสร้างคู่แบบพบกันหมดในแต่ละสาย สามารถนำไปปรับวันที่และลำดับแข่งขันภายหลัง</p><div id="groupSummary"></div></div></div>
+<div class="tablewrap" style="margin-top:18px"><table><thead><tr><th>คู่ที่</th><th>สาย</th><th>ทีม 1</th><th>ทีม 2</th></tr></thead><tbody id="fixtureRows"><tr><td colspan="4">ยังไม่มีร่างโปรแกรม</td></tr></tbody></table></div></section>
+<section class="page" id="online"><div class="eyebrow">LIVE GUEST CONTROL · V0.2 BETA</div><h1>Quick Scoreboard Online</h1>
+<p>สร้างเกมแบบไม่ล็อกอิน แชร์ลิงก์ให้ผู้ชมดูคะแนนจากมือถืออีกเครื่อง และบันทึกคะแนนบน Supabase โดยผู้ชมแก้คะแนนไม่ได้</p>
+<div class="notice"><b>โหมดทดสอบ:</b> ระบบดึงคะแนนใหม่ประมาณทุก 3.5 วินาที ยังไม่ใช่ Realtime Push และยังไม่ควรใช้สำหรับผลการแข่งขันทางการ โปรดเก็บลิงก์ Recovery เป็นความลับ</div>
+<div class="card"><div class="formrow"><label>ชื่อทีม A<input id="onlineTeamA" maxlength="60" value="ทีม A"></label><label>ชื่อทีม B<input id="onlineTeamB" maxlength="60" value="ทีม B"></label><label>รูปแบบ<select id="onlineMode"><option value="3">2 ใน 3 เซต</option><option value="5">3 ใน 5 เซต</option></select></label></div>
+<div class="actions"><button class="btn primary" id="onlineCreate">+ สร้างเกมออนไลน์</button><button class="btn" id="onlineResume">เปิดเกมล่าสุดในเครื่องนี้</button><button class="btn" id="onlineRefresh">↻ โหลดคะแนน</button></div>
+<p id="onlineStatus" role="status">สร้างเกมเพื่อเริ่มต้น หรือเปิดลิงก์เกมที่ได้รับ</p></div>
+<div class="card" id="onlineLinks" hidden style="margin-top:16px"><h3>ลิงก์สำหรับแชร์และกู้คืน</h3><p>ลิงก์ผู้ชมใช้ดูได้อย่างเดียว ลิงก์ควบคุมสามารถเพิ่มลดแต้มได้ และลิงก์ Recovery ใช้กู้คืนสิทธิ์เมื่อหมดอายุ</p>
+<div class="formrow"><label>Viewer — สำหรับผู้ชม<input id="onlineViewerUrl" readonly aria-label="ลิงก์ผู้ชม"><button type="button" class="btn" data-online-copy="onlineViewerUrl">คัดลอก Viewer</button></label>
+<label>Controller — สำหรับเจ้าหน้าที่<input id="onlineControllerUrl" readonly aria-label="ลิงก์ควบคุม"><button type="button" class="btn" data-online-copy="onlineControllerUrl">คัดลอก Controller</button></label>
+<label>Recovery — เก็บไว้ส่วนตัว<input id="onlineRecoveryUrl" readonly aria-label="ลิงก์กู้คืน"><button type="button" class="btn" data-online-copy="onlineRecoveryUrl">คัดลอก Recovery</button></label></div></div>
+<div id="onlineBoard" hidden style="margin-top:18px"><div class="card"><div class="formrow"><span class="tag" id="onlineRole">viewer</span><b id="onlineMeta">เซต 1</b></div></div>
+<div class="scoreboard"><div class="team"><strong id="onlineName0">ทีม A</strong><div class="points" id="onlinePoints0">0</div><div class="setscore" id="onlineWins0">ชนะ 0 เซต</div>
+<div class="counter" id="onlineControlsLeft"><button class="btn" data-online-team="0" data-online-delta="-1" aria-label="ลดแต้มทีมซ้าย">−</button><button class="btn primary" data-online-team="0" data-online-delta="1" aria-label="เพิ่มแต้มทีมซ้าย">+</button></div></div>
+<div class="team"><strong id="onlineName1">ทีม B</strong><div class="points" id="onlinePoints1">0</div><div class="setscore" id="onlineWins1">ชนะ 0 เซต</div>
+<div class="counter"><button class="btn" data-online-team="1" data-online-delta="-1" aria-label="ลดแต้มทีมขวา">−</button><button class="btn primary" data-online-team="1" data-online-delta="1" aria-label="เพิ่มแต้มทีมขวา">+</button></div></div></div>
+<div class="result" id="onlineCompleted" hidden></div><div class="card" style="margin-top:16px"><b>ประวัติเซต</b><p id="onlineSetHistory">ยังไม่จบเซต</p></div>
+<div class="actions" id="onlineControls" hidden><button class="btn primary" id="onlineConfirmSet" hidden>ยืนยันเซต / เซตต่อไป</button>
+<button class="btn" id="onlineSwap">⇄ สลับด้าน</button><button class="btn" id="onlineUndo">↶ Undo</button>
+<button class="btn primary" id="onlineSwitchDone" hidden>สลับฝั่งที่ 8 แล้ว</button><button class="btn" id="onlineSwitchLater" hidden>ยังไม่สลับ</button></div>
+<div class="actions"><button class="btn" id="onlineRecovery" hidden>กู้คืน / ออกลิงก์ใหม่</button></div></div></section>
+<section class="page" id="manager">
+<div class="eyebrow">V0.3 · PRIVATE TOURNAMENT MANAGER</div><h1>จัดการแข่งขันออนไลน์</h1>
+<p>สร้างรายการแข่งขันพร้อมบันทึกทีม แบ่งสาย A–D และสร้างคู่พบกันหมดในฐานข้อมูล Supabase โดยอัตโนมัติ</p>
+<div class="notice"><b>เวอร์ชันพัฒนา:</b> ต้องลงชื่อเข้าใช้ก่อน ข้อมูลยังเป็นร่าง ไม่ใช่ผลแข่งขันทางการ โปรแกรมยังไม่กำหนดวัน/เวลา สนาม หรือระยะพักนักกีฬา</div>
+<div class="card" id="mgrGuest">
+<h3>เข้าสู่ระบบผู้จัดการแข่งขัน</h3>
+<div class="formrow"><label>อีเมล<input id="mgrEmail" type="email" autocomplete="email" placeholder="you@example.com"></label>
+<label>รหัสผ่าน<input id="mgrPassword" type="password" autocomplete="current-password" minlength="6" placeholder="อย่างน้อย 6 ตัวอักษร"></label></div>
+<div class="actions"><button class="btn primary" id="mgrSignIn">เข้าสู่ระบบ</button>
+<button class="btn" id="mgrSignUp">สมัครบัญชี</button></div>
+<p class="muted">หากสมัครใหม่ ระบบอาจส่งอีเมลยืนยันบัญชี ต้องยืนยันอีเมลก่อนลงชื่อเข้าใช้ การตั้งค่าลิงก์ยืนยันใน Supabase อาจต้องอนุญาตโดเมน Preview</p>
+</div>
+<div id="mgrSignedIn" hidden>
+<div class="card"><div class="formrow" style="justify-content:space-between;align-items:center">
+<b>บัญชีผู้จัด: <span id="mgrUser"></span></b><button class="btn" id="mgrSignOut">ออกจากระบบ</button></div></div>
+<div class="two" style="margin-top:16px">
+<div class="card"><h3>สร้างรายการแข่งขันใหม่</h3>
+<div class="formrow"><label>ชื่อรายการแข่งขัน<input id="mgrTournamentName" maxlength="140" placeholder="วอลเลย์บอลหญิงประจำปี 2569"></label>
+<label>รูปแบบการแข่งขัน<select id="mgrBestOf"><option value="3">2 ใน 3 เซต</option><option value="5">3 ใน 5 เซต</option></select></label></div>
+<label>รายชื่อทีม (ทีมละ 1 บรรทัด)</label><textarea id="mgrTeams" placeholder="หมู่ 1&#10;หมู่ 2&#10;หมู่ 3&#10;หมู่ 4"></textarea>
+<div class="formrow"><label>จำนวนสาย<select id="mgrGroupCount"><option value="1">1 สาย</option><option value="2" selected>2 สาย</option><option value="3">3 สาย</option><option value="4">4 สาย</option></select></label></div>
+<div class="actions"><button class="btn primary" id="mgrCreate">สร้างและบันทึกรายการออนไลน์</button></div>
+<p class="muted">ระบบแบ่งทีมตามลำดับที่กรอกวนเข้าทีละสาย ไม่ใช่ระบบจับสลากจริง และสร้างรายการในสถานะ Draft เท่านั้น</p></div>
+<div class="card"><h3>รายการแข่งขันของฉัน</h3><button class="btn" id="mgrReload">↻ โหลดรายการใหม่</button>
+<div id="mgrList" style="margin-top:15px;display:grid;gap:10px"></div></div></div>
+<div class="card" style="margin-top:16px"><h3>รายละเอียดรายการที่เลือก</h3>
+<div id="mgrDetails" style="overflow-x:auto"><p class="muted">เลือกรายการแข่งขันเพื่อดูทีม สาย และคู่แข่งขัน</p></div></div>
+</div>
+<p id="mgrStatus" role="status" style="margin-top:16px"></p></section>
+<section class="page" id="scoresheet"><div class="eyebrow">CONNECTED MODULE</div><h1>Official Scoresheet</h1><div class="placeholder"><h2>กำลังพัฒนา FIVB Rule Engine</h2><p>ระบบ Line-up, Rotation, Substitution, Libero, Event Ledger และการรับรองผล มีระบบลงบันทึกและการรับรองผล; ยังคงต้องทดสอบการตรวจตำแหน่งขั้นสูง</p></div></section>
+<section class="page" id="draw"><div class="eyebrow">COMING NEXT</div><h1>Live Draw</h1><div class="placeholder"><h2>กำลังพัฒนาการจับสลากที่ตรวจสอบได้</h2><p>มีระบบสุ่มฝั่งเซิร์ฟเวอร์พร้อมบันทึก Audit Log</p></div></section>
+<section class="page" id="graphics"><div class="eyebrow">COMING NEXT</div><h1>Graphic Studio</h1><div class="placeholder"><h2>กำลังพัฒนา Graphic Editor</h2><p>สร้าง PNG และ PDF พร้อมบันทึกแบบกราฟิกได้</p></div></section>
+<div class="footer">Valley Ball Check · Tournament management suite · แยก Quick Scoreboard Local และ Scoreboard Online</div></main></div>
+<script>
+(function(){
+"use strict";
+var sk="vbc_score_v01",tk="vbc_tournament_v01";
+var base=function(){return {names:["ทีม A","ทีม B"],mode:3,left:0,sets:[{a:0,b:0}],confirmed:[],switched:false,seen8:false,ended:false,undo:[]}};
+var data=base(),draft={teams:[],groups:[],fixtures:[]};
+try{var v=JSON.parse(localStorage.getItem(sk)||"null");if(v&&[3,5].includes(v.mode)&&Array.isArray(v.sets)&&Array.isArray(v.names))data=v}catch(e){}
+try{var p=JSON.parse(localStorage.getItem(tk)||"null");if(p&&Array.isArray(p.fixtures))draft=p}catch(e){}
+function el(id){return document.getElementById(id)}
+function store(){try{localStorage.setItem(sk,JSON.stringify(data))}catch(e){}}
+function storeDraft(){try{localStorage.setItem(tk,JSON.stringify(draft))}catch(e){}}
+function secure(t){return String(t).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function winner(s,idx){var goal=idx===data.mode-1?15:25;return (s.a>=goal||s.b>=goal)&&Math.abs(s.a-s.b)>=2?(s.a>s.b?0:1):-1}
+function totals(){var t=[0,0];(data.confirmed||[]).forEach(function(s,i){var w=winner(s,i);if(w>=0)t[w]++});return t}
+function current(){return data.sets[data.sets.length-1]}
+function snapshot(){var prev=JSON.parse(JSON.stringify(data));delete prev.undo;data.undo=data.undo||[];data.undo.push(prev);if(data.undo.length>80)data.undo.shift()}
+function render(){
+ var s=current(),t=totals(),w=winner(s,data.sets.length-1),final=t.some(function(n){return n>=Math.ceil(data.mode/2)});
+ el("mode").value=String(data.mode);el("setNo").textContent=String(data.sets.length);el("setsWon").textContent=t.join(" – ");
+ [0,1].forEach(function(place){var i=(data.left+place)%2;el("team"+place).value=data.names[i];el("team"+place).dataset.team=String(i);el("points"+place).textContent=String(i===0?s.a:s.b);el("wins"+place).textContent="ชนะ "+t[i]+" เซต"});
+ document.querySelectorAll("[data-change]").forEach(function(b){var args=b.dataset.change.split(","),idx=(data.left+Number(args[0]))%2;b.disabled=final||w>=0||(Number(args[1])<0&&(idx===0?s.a:s.b)===0)});
+ var deciding=data.sets.length===data.mode,hit=deciding&&Math.max(s.a,s.b)>=8;
+ el("switchNotice").hidden=!hit||data.switched||final||w>=0||data.seen8;
+ el("nextSet").hidden=w<0||final;el("nextSet").textContent="ยืนยันเซต "+data.sets.length+" / ไปเซตต่อไป";
+ el("winnerNotice").hidden=w<0&&!final;
+ if(final){el("winnerNotice").textContent="จบการแข่งขัน · ผู้ชนะ: "+data.names[t[0]>t[1]?0:1]+" ("+t.join("–")+")"}
+ else if(w>=0)el("winnerNotice").textContent="ถึงคะแนนชนะเซตแล้ว: "+data.names[w]+" · กดยืนยันเซตเพื่อดำเนินต่อ";
+ el("undoScore").disabled=!(data.undo&&data.undo.length);
+ el("historySets").textContent=data.confirmed&&data.confirmed.length?data.confirmed.map(function(x,i){return "เซต "+(i+1)+": "+x.a+"–"+x.b}).join(" · "):"ยังไม่มีเซตจบ";
+ el("homeScore").textContent=s.a+" : "+s.b;el("homeTeams").textContent=String(draft.teams.length);el("homeGames").textContent=String(draft.fixtures.length);
+ store()
+}
+function change(place,delta){var i=(data.left+place)%2,s=current();if(data.ended||winner(s,data.sets.length-1)>=0)return;var k=i===0?"a":"b";if(s[k]+delta<0)return;snapshot();s[k]+=delta;render()}
+function switchSides(){snapshot();data.left=1-data.left;render()}
+function nextSet(){var s=current(),w=winner(s,data.sets.length-1);if(w<0)return;snapshot();data.confirmed.push({a:s.a,b:s.b});var t=totals();if(t.some(function(n){return n>=Math.ceil(data.mode/2)})){data.ended=true}else{data.sets.push({a:0,b:0});data.switched=false;data.seen8=false}render()}
+function undo(){if(!(data.undo||[]).length)return;var prev=data.undo.pop(),undo=data.undo;data=prev;data.undo=undo;render()}
+document.querySelectorAll("[data-page]").forEach(function(b){b.addEventListener("click",function(){var page=b.dataset.page;document.querySelectorAll(".page").forEach(function(s){s.classList.toggle("active",s.id===page)});document.querySelectorAll(".nav button").forEach(function(n){n.classList.toggle("active",n.dataset.page===page)});el("location").textContent="VALLEY BALL CHECK / "+(b.textContent.trim()||page);window.scrollTo(0,0)})});
+document.querySelectorAll("[data-change]").forEach(function(b){b.addEventListener("click",function(){var a=b.dataset.change.split(",");change(Number(a[0]),Number(a[1]))})});
+[0,1].forEach(function(place){el("team"+place).addEventListener("change",function(e){var i=Number(e.target.dataset.team);snapshot();data.names[i]=e.target.value.trim().slice(0,60)||("ทีม "+(i+1));render()})});
+el("mode").addEventListener("change",function(e){if(!confirm("เปลี่ยนรูปแบบการแข่งขันจะเริ่มเกมใหม่ ยืนยันหรือไม่?")){render();return}data=base();data.mode=Number(e.target.value);render()});
+el("swapSides").onclick=switchSides;el("nextSet").onclick=nextSet;el("undoScore").onclick=undo;
+el("switchDone").onclick=function(){snapshot();data.switched=true;data.left=1-data.left;render()};
+el("switchLater").onclick=function(){snapshot();data.seen8=true;render()};
+el("resetScore").onclick=function(){if(confirm("เริ่มเกมใหม่และลบคะแนนในเกมนี้หรือไม่?")){data=base();render()}};
+el("fullscreen").onclick=function(){var e=el("scoreboard");if(document.fullscreenElement){document.exitFullscreen().catch(function(){})}else if(e.requestFullscreen)e.requestFullscreen().catch(function(){})};
+function fixtures(){var names=el("teamList").value.split(/\r?\n/).map(function(t){return t.trim()}).filter(Boolean),count=Number(el("groupCount").value);if(names.length<2||names.length>64||names.length<count){el("draftMessage").textContent="ต้องมีทีมอย่างน้อย 2 ทีม และไม่เกิน 64 ทีม โดยจำนวนทีมต้องไม่น้อยกว่าจำนวนสาย";return}
+var groups=Array.from({length:count},function(){return []});names.forEach(function(n,i){groups[i%count].push(n)});
+var pools=groups.map(function(g,gi){var arr=[];for(var i=0;i<g.length;i++)for(var j=i+1;j<g.length;j++)arr.push({group:String.fromCharCode(65+gi),a:g[i],b:g[j]});return arr});
+var out=[];var more=true;while(more){more=false;pools.forEach(function(arr){if(arr.length){out.push(arr.shift());more=true}})}
+draft={teams:names,groups:groups,fixtures:out};storeDraft();renderDraft();el("draftMessage").textContent="สร้างร่าง "+out.length+" คู่แล้ว (ยังไม่มีระบบจัดเวลาพักหรือจับสลาก)"}
+function renderDraft(){el("teamList").value=draft.teams.join("\n");el("groupCount").value=String(Math.max(1,draft.groups.length));el("groupSummary").innerHTML=draft.groups.map(function(g,i){return "<p><b>สาย "+String.fromCharCode(65+i)+"</b> · "+g.length+" ทีม: "+g.map(secure).join(", ")+"</p>"}).join("");el("fixtureRows").innerHTML=draft.fixtures.length?draft.fixtures.map(function(f,i){return "<tr><td>"+(i+1)+"</td><td>"+secure(f.group)+"</td><td>"+secure(f.a)+"</td><td>"+secure(f.b)+"</td></tr>"}).join(""):'<tr><td colspan="4">ยังไม่มีร่างโปรแกรม</td></tr>'}
+function csvSafe(v){var s=String(v);if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'}
+el("makeFixtures").onclick=fixtures;el("exportCsv").onclick=function(){if(!draft.fixtures.length){el("draftMessage").textContent="สร้างคู่แข่งขันก่อนส่งออก CSV";return}var rows=[["คู่ที่","สาย","ทีม 1","ทีม 2"]].concat(draft.fixtures.map(function(f,i){return [i+1,f.group,f.a,f.b]}));var csv="\ufeff"+rows.map(function(row){return row.map(csvSafe).join(",")}).join("\r\n");var url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));var a=document.createElement("a");a.href=url;a.download="valley-ball-fixtures-draft.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},1000)};
+renderDraft();render();
+})();
+</script><script src="online.js" defer></script><script src="tournament-manager.js" type="module"></script><script src="official-ui.js" type="module"></script><script src="position-check.js" type="module"></script><script src="draw-ui.js" type="module"></script><script src="graphics-ui.js" type="module"></script><script src="public-standings-ui.js" type="module"></script></body></html>

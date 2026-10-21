@@ -1,0 +1,42 @@
+name: Valley Ball Check CI
+on:
+  push:
+    branches: [main, "development/**"]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  rules-and-static-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Volleyball rules tests
+        run: node --test tests/rules.test.mjs
+      - name: Check browser JavaScript syntax
+        run: |
+          node --check online.js
+          node --check tournament-manager.js
+          node --check suite-core.js
+          node --check official-ui.js
+          node --check draw-ui.js
+          node --check graphics-ui.js
+          node --check public-standings-ui.js
+          node --check position-check.js
+      - name: Validate essential frontend assets
+        run: |
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const html=fs.readFileSync('index.html','utf8');
+          for(const file of ['online.js','tournament-manager.js','suite-core.js','official-ui.js','draw-ui.js','graphics-ui.js','public-standings-ui.js','position-check.js','lib/volleyball-rules.mjs']){
+            if(!fs.existsSync(file))throw new Error('Missing '+file);
+            if(file!=='suite-core.js' && file!=='lib/volleyball-rules.mjs' && !html.includes(file))throw new Error('Unlinked '+file);
+          }
+          const ids=[...html.matchAll(/id="([^"]+)"/g)].map(x=>x[1]);
+          if(ids.length!==new Set(ids).size)throw new Error('Duplicate HTML IDs');
+          console.log('Static validation passed:',ids.length,'unique IDs');
+          NODE
