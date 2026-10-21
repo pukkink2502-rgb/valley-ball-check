@@ -24,7 +24,7 @@ async function loadMatches(keep=true){
 function matchOptions(keep){
  const id=$("offTournament").value,old=keep?$("offMatch").value:"";
  const list=items.filter(m=>m.tournament_id===id);
- opt($("offMatch"),list.map((x,i)=>({value:x.id,label:"คู่ "+(i+1)+" · "+(x.team_a||"ทีม A")+" พบ "+(x.team_b||"ทีม B")+" · "+status(x.status)})),"เลือกคู่แข่งขัน");
+ opt($("offMatch"),list.map((x,i)=>({value:x.id,label:(x.stage_title||"รอบแข่งขัน")+" · คู่ "+(i+1)+" · "+(x.team_a||x.slot_a||"รอระบุทีม")+" พบ "+(x.team_b||x.slot_b||"รอระบุทีม")+" · "+status(x.status)})),"เลือกคู่แข่งขัน");
  if(old&&list.some(x=>x.id===old))$("offMatch").value=old;
  if(!$("offMatch").value&&list.length===1)$("offMatch").value=list[0].id;
  if($("offMatch").value)openMatch($("offMatch").value);
@@ -36,7 +36,7 @@ async function openMatch(id,keepSet=false){
   cur=await api("official_match_snapshot",{p_match:id});
   if(!keepSet)selectedSet=currentSet();
   dirty=false;render();
-  $("offStatus").textContent="โหลดข้อมูล "+cur.team_a+" พบ "+cur.team_b+" เรียบร้อย";
+  $("offStatus").textContent="โหลดข้อมูล "+(cur.team_a||cur.slot_a||"รอทีม")+" พบ "+(cur.team_b||cur.slot_b||"รอทีม")+" เรียบร้อย";
  }catch(e){notify("เปิดสกอร์ชีตไม่ได้","error",e.message);$("offStatus").textContent=e.message}
 }
 function currentSet(){
@@ -46,18 +46,18 @@ function currentSet(){
 }
 function isLocked(){return ["approved","pending_approval","void"].includes(cur.status)}
 function canEditSet(){
- return cur.can_score&&!isLocked()&&!cur.sets.some(s=>s.set===selectedSet&&(s.a>0||s.b>0));
+ return cur.can_score&&!!cur.team_a_id&&!!cur.team_b_id&&!isLocked()&&!cur.sets.some(s=>s.set===selectedSet&&(s.a>0||s.b>0));
 }
 const fieldValue=(side,pos)=>root.querySelector('input[data-court-side="'+side+'"][data-court-pos="'+pos+'"]')?.value.trim()||"";
 function render(){
  if(!cur)return;$("offLoaded").hidden=false;
- $("offName0").textContent=cur.team_a;$("offName1").textContent=cur.team_b;
- $("courtNameA").textContent=cur.team_a;$("courtNameB").textContent=cur.team_b;
+ $("offName0").textContent=cur.team_a||cur.slot_a||"รอระบุทีม";$("offName1").textContent=cur.team_b||cur.slot_b||"รอระบุทีม";
+ $("courtNameA").textContent=cur.team_a||cur.slot_a||"รอระบุทีม";$("courtNameB").textContent=cur.team_b||cur.slot_b||"รอระบุทีม";
  const last=cur.sets.at(-1),live=last?.status==="live"?last:null;
  $("offPoints0").textContent=live?.a??0;$("offPoints1").textContent=live?.b??0;
  $("offSetScore").textContent=cur.sets_won.join(" : ");
  $("offMeta").textContent="เซตที่ "+selectedSet+" / "+cur.best_of+" · "+status(cur.status);
- $("offBadge").textContent=status(cur.status);
+ $("offBadge").textContent=cur.team_a_id&&cur.team_b_id?status(cur.status):"รอกำหนดทีม";
  $("offMatchId").textContent="คู่ที่เลือก · "+cur.id.slice(0,8);
  $("offSetHistory").textContent=cur.sets.length?cur.sets.map(s=>"เซต "+s.set+" ("+s.a+"–"+s.b+")").join(" · "):"ยังไม่เริ่มการแข่งขัน";
  const tabs=$("offSetTabs");tabs.replaceChildren();
@@ -86,7 +86,7 @@ function render(){
  $("offSaveBoth").disabled=!canEditSet();
  $("offCourtHint").textContent=canEditSet()?
   "กรอกหมายเลขเสื้อทีมซ้ายและขวาให้ครบ 6 ตำแหน่ง แล้วกดบันทึก": "เซตนี้เริ่มมีคะแนนแล้วหรือถูกล็อก จึงไม่สามารถแก้ตัวจริงได้";
- $("offActions").hidden=!cur.can_score||isLocked();
+ $("offActions").hidden=!cur.can_score||!cur.team_a_id||!cur.team_b_id||isLocked();
  $("offApprove").hidden=cur.status!=="pending_approval"||!cur.can_approve;
  const log=$("offLog");log.replaceChildren();
  for(const ev of [...cur.events].reverse().slice(0,200)){
