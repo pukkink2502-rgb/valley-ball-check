@@ -13,7 +13,7 @@ async function publicInit(){
    opt($("pubTournament"),publicList.map(t=>({value:t.slug,label:t.name+" ("+t.status+")"})),"เลือกรายการ");
    tell("พบรายการสาธารณะ "+publicList.length+" รายการ");
    const hash=location.hash.match(/^#public=([a-z0-9-]+)$/);
-   if(hash&&publicList.some(x=>x.slug===hash[1])){$("pubTournament").value=hash[1];await show(hash[1]);}
+   if(hash&&publicList.some(x=>x.slug===hash[1])){$("pubTournament").value=hash[1];nav.click();await show(hash[1]);}
  }catch(e){tell(e.message,true)}
  try{ownedList=await owned();$("pubOwner").hidden=false;
  opt($("pubOwnerTournament"),ownedList.map(x=>({value:x.id,label:x.name+" · "+x.status})),"เลือกรายการของฉัน");
@@ -52,7 +52,8 @@ $("pubPrint").onclick=()=>window.print();
 $("pubPublish").onclick=async()=>{
  const id=$("pubOwnerTournament").value;if(!id)return admin("เลือกรายการ",true);
  if(!confirm("เผยแพร่ชื่อทีมและโปรแกรมของรายการนี้สู่สาธารณะ?"))return;
- try{const result=await api("publish_tournament",{p_tournament:id});admin("เผยแพร่สำเร็จ: "+result.slug);await publicInit();
+ try{const result=await api("publish_tournament",{p_tournament:id});admin("เผยแพร่สำเร็จ: "+result.slug);await db.auth.onAuthStateChange(()=>setTimeout(()=>publicInit().catch(e=>tell(e.message,true)),0));
+publicInit();
    $("pubTournament").value=result.slug;await show(result.slug);}
  catch(e){admin(e.message,true)}
 };
