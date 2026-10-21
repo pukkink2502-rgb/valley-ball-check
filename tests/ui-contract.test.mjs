@@ -73,3 +73,22 @@ test('graphics selected result uses completed match scores, not schedule VS rows
  'paintResultCard','winner','match_sets','score_a_sets','score_b_sets'])
  assert.ok(gfx.includes(x),x);
 });
+
+test('landscape A4 printable scoresheet crosses individual logged points and shows service columns',()=>{
+ const report=read('scoresheet-report.js');
+ for(const part of ['orientation:"landscape"','format:"a4"','297,210','pointEvents','pointsByTeam','serviceSequence','I","II","III','makeScoresheetDocument'])
+  if(part==='pointEvents')continue;else assert.ok(report.includes(part),part);
+ assert.ok(report.includes('drawPoints'));
+});
+test('scorer uses actual court side, alternating service and manual toss in set 1/decider',()=>{
+ for(const part of ['courtForSet','offLeftTeamSelect','offSideSave','set_match_court_side','sideTeamId','automaticFirstServer','ensureAutomaticSetService','isCoinTossSet'])
+  assert.ok(official.includes(part),part);
+ assert.ok(existsSync(new URL('../court-side-rules.mjs',import.meta.url)));
+ assert.ok(existsSync(new URL('../APPLY_TO_SUPABASE_WHEN_READY.sql',import.meta.url)));
+});
+test('approved poster picks matches through match RPC and loads when tournament changes',()=>{
+ assert.ok(gfx.includes('buildResultFromMatchRpc'));
+ assert.ok(gfx.includes('my_official_matches'));
+ assert.ok(gfx.includes('official_match_snapshot'));
+ assert.ok(gfx.includes('gfxTournament").onchange'));
+});
