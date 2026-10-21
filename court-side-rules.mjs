@@ -19,3 +19,25 @@ export function automaticFirstServer(snapshot,set){
  const previous=(snapshot.services||[]).find(x=>Number(x.set)===Number(set)-1);
  return previous?.first_team_id?opposite(previous.first_team_id,snapshot.team_a_id,snapshot.team_b_id):null;
 }
+
+/**
+ * Map canonical team A/B points to the physically displayed left/right sides.
+ * A team's score NEVER changes ownership when its court side changes.
+ * An optional court override supports clearly marked legacy matches.
+ */
+export function courtScoreView(snapshot,set,court=courtForSet(snapshot,set)){
+ if(!snapshot||!court||![snapshot.team_a_id,snapshot.team_b_id].includes(court.left)
+ || ![snapshot.team_a_id,snapshot.team_b_id].includes(court.right)
+ || court.left===court.right)return null;
+ const row=(snapshot.sets||[]).find(x=>Number(x.set)===Number(set));
+ const team=id=>id===snapshot.team_a_id?
+  {id,name:snapshot.team_a||snapshot.slot_a||"ทีม A",points:Number(row?.a)||0,index:0}:
+  {id,name:snapshot.team_b||snapshot.slot_b||"ทีม B",points:Number(row?.b)||0,index:1};
+ return {set:Number(set),left:team(court.left),right:team(court.right)};
+}
+export function courtScoreMessage(snapshot,set,court=courtForSet(snapshot,set)){
+ const view=courtScoreView(snapshot,set,court);
+ if(!view)return null;
+ return "เซต "+view.set+" · "+view.left.name+" "+view.left.points+
+ " : "+view.right.points+" "+view.right.name;
+}
