@@ -127,46 +127,226 @@ async function open(id,scroll){
   if(scroll)$("mgrEditor").scrollIntoView({behavior:"smooth",block:"start"});
  }catch(e){note("เปิดรายการไม่สำเร็จ","error",e.message)}
 }
+function sequenceMatches(m,stage=null){
+ const order=new Map((m.stages||[]).map(t=>[t.id,t.sort_order]));
+ return m.matches.filter(x=>!stage||x.stage_id===stage)
+ .sort((a,b)=>(order.get(a.stage_id)||0)-(order.get(b.stage_id)||0)
+ || (Number(a.display_order)||999999)-(Number(b.display_order)||999999)
+ || new Date(a.created_at)-new Date(b.created_at) || a.id.localeCompare(b.id));
+}
+function initialStage(m){
+ return m.stages.find(x=>["pool","round_robin"].includes(x.stage_type));
+}
+function poolFor(m,team){
+ const row=m.assigned.find(x=>x.team_id===team);
+ return m.pools.find(p=>p.id===row?.pool_id)?.code||"—";
+}
+function stageLabel(stage){
+ return (stage?.title||"รอบเพิ่มเติม");
+}
+function addTeamOptions(node,teams,label){
+ node.replaceChildren();
+ node.add(new Option("รอผลจากรอบก่อน (กรอกคำอธิบาย)", ""));
+ for(const t of teams)node.add(new Option(t.name,t.id));
+}
 function render(){
  if(!current)return;
- const m=current;$("mgrEditor").hidden=false;
+ const m=current;
+ $("mgrEditor").hidden=false;
  $("mgrSelectedTitle").textContent=m.name;
- $("mgrSelectedMeta").textContent=fmt(m.status)+" · "+m.teams.length+" ทีม · "+m.pools.length+" สาย · "+m.matches.length+" คู่";
+ $("mgrSelectedMeta").textContent=(formatName[m.competition_format]||"แบ่งสายพบกันหมด")+
+ " · "+fmt(m.status)+" · "+m.teams.length+" ทีม · "+m.pools.length+" สาย · "+m.matches.length+" คู่ · "+m.stages.length+" รอบ";
  $("mgrRenameName").value=m.name;
- $("mgrRename").disabled=m.status!=="draft";$("mgrDeleteTournament").disabled=m.status!=="draft";
+ $("mgrRename").disabled=m.status!=="draft";
+ $("mgrDeleteTournament").disabled=m.status!=="draft";
+ $("mgrDeleteTournament").title=m.status==="draft"?"ลบรายการฉบับร่างได้ หากยังไม่มีผลการแข่งขัน":"ลบรายการที่เผยแพร่แล้วไม่ได้";
  const poolById=new Map(m.pools.map(x=>[x.id,x.code])),teamsById=new Map(m.teams.map(x=>[x.id,x.name]));
  const byTeam=new Map(m.assigned.map(x=>[x.team_id,x.pool_id]));
  const pane=$("mgrPoolTeams");pane.replaceChildren();
+ const canMove=m.status==="draft"&&m.competition_format==="group_round_robin"&&m.pools.length>1;
+ if(!canMove)pane.append(elem("p",m.competition_format==="group_round_robin"?"รายการนี้มีสายเดียว":"รายการนี้ไม่ใช้การแบ่งสายแบบอัตโนมัติ"));
  for(const team of m.teams){
   const row=elem("div","","item-card"),name=elem("strong",team.name);
   const sel=elem("select");sel.setAttribute("aria-label","สายการแข่งขันของ "+team.name);
   for(const p of m.pools)sel.add(new Option("สาย "+p.code,p.id));
-  sel.value=byTeam.get(team.id)||"";sel.disabled=m.status!=="draft";
+  sel.value=byTeam.get(team.id)||"";sel.disabled=!canMove;
   sel.onchange=async()=>{
-   if(!confirm("ย้าย "+team.name+" ไป "+poolById.get(sel.value)+" และสร้างคู่แข่งขันในสายใหม่?")){sel.value=byTeam.get(team.id)||"";return}
-   const v=sel.value;sel.disabled=true;
-   try{const response=await api("move_team_pool",{p_tournament:m.id,p_team:team.id,p_pool:v});
-    await open(m.id,false);note("บันทึกการย้ายสายสำเร็จ","success",team.name+" · สาย "+response.new_pool)}
-   catch(e){note("ย้ายสายไม่สำเร็จ","error",e.message);sel.value=byTeam.get(team.id)||"";sel.disabled=false}
+   const nextPool=sel.value;
+   if(!confirm("ย้าย "+team.name+" ไปสาย "+poolById.get(nextPool)+" และสร้างคู่ในสายใหม่?"))
+    return void (sel.value=byTeam.get(team.id)||"");
+   sel.disabled=true;
+   try{
+    const response=await api("move_team_pool",{p_tournament:m.id,p_team:team.id,p_pool:nextPool});
+    await open(m.id,false);
+    try{await autoOrder(false)}catch(e){note("ย้ายทีมแล้ว แต่ยังเรียงคู่ไม่ได้","warning",readableError(e))}
+    note("บันทึกการย้ายสายสำเร็จ","success",team.name+" · สาย "+response.new_pool);
+   }catch(e){note("ย้ายสายไม่สำเร็จ","error",readableError(e));sel.value=byTeam.get(team.id)||"";sel.disabled=false}
   };
   row.append(name,sel);pane.append(row);
  }
- const tbody=$("mgrMatches");tbody.replaceChildren();
- m.matches.forEach((match,index)=>{
+ const list=$("mgrStageList");list.replaceChildren();
+ for(const stage of m.stages){
+  const row=elem("div","","item-card"),block=elem("div");
+  block.append(elem("strong",stage.title),elem("small",
+   ({pool:"แบ่งสาย",round_robin:"พบกันหมด",knockout:"แพ้คัดออก"})[stage.stage_type]+" · "+m.matches.filter(x=>x.stage_id===stage.id).length+" คู่"));
+  const badge=elem("span","รอบ "+stage.sort_order,"wizard-pill");
+  row.append(block,badge);list.append(row);
+ }
+ $("mgrAddSemis").hidden=!(m.competition_format==="group_round_robin"&&m.pools.length===2);
+ $("mgrAddSemis").disabled=m.status!=="draft"||m.stages.some(x=>x.stage_type==="knockout");
+ $("mgrCreateStage").disabled=!["draft","published"].includes(m.status);
+ const stageSelect=$("mgrMatchStage");stageSelect.replaceChildren();
+ for(const stage of m.stages)stageSelect.add(new Option(stage.title,stage.id));
+ addTeamOptions($("mgrMatchTeamA"),m.teams);
+ addTeamOptions($("mgrMatchTeamB"),m.teams);
+ clearMatchEdit();
+ $("mgrAddMatch").disabled=!["draft","published"].includes(m.status);
+ const base=initialStage(m);
+ const canAuto=m.status==="draft"&&["group_round_robin","round_robin"].includes(m.competition_format)&&base!==undefined;
+ $("mgrAutoOrder").hidden=!canAuto;
+ $("mgrAutoOrder").disabled=!canAuto||m.matches.some(x=>x.stage_id===base?.id&&
+ (x.status!=="scheduled"||x.scheduled_start||x.event_revision>0));
+ const scheduledPoolMatches=base?sequenceMatches(m,base.id):[];
+ const last=analyzeOrder(scheduledPoolMatches);
+ $("mgrOrderReport").textContent=base?
+  (last.hasAdjacent?
+   "⚠ มี "+last.violations.length+" จุดที่ทีมลงสนามติดกับคู่ก่อนหน้า กด “จัดลำดับ” เพื่อพยายามกระจายคู่"
+   :"✓ ลำดับคู่รอบแบ่งสายไม่มีทีมเดิมแข่งขันต่อกันทันที")+
+  " · การเว้น 45/60 นาทีต้องตรวจจากเวลาแข่งจริงอีกครั้ง":
+  "เลือกประเภทการแข่งขันและเพิ่มรอบต่อไปได้ด้วยตัวเอง";
+ const rows=sequenceMatches(m),tbody=$("mgrMatches");tbody.replaceChildren();
+ rows.forEach((match,index)=>{
+  const stage=m.stages.find(x=>x.id===match.stage_id);
+  const label=stageLabel(stage)+(match.round_number?" · รอบย่อย "+match.round_number:"")+
+   (stage?.stage_type==="pool"?" · สาย "+poolFor(m,match.team_a_id):"");
   const row=elem("tr");
-  const group=poolById.get(byTeam.get(match.team_a_id))||"—";
-  for(const val of [index+1,group,teamsById.get(match.team_a_id)||"?",teamsById.get(match.team_b_id)||"?",fmt(match.status)])row.append(elem("td",val));
-  const td=elem("td"),b=elem("button","ลบ","btn danger");
-  b.disabled=match.status!=="scheduled"||!!match.scheduled_start;
-  b.setAttribute("aria-label","ลบคู่แข่งขันที่ "+(index+1));b.onclick=async()=>{
-   if(!confirm("ยืนยันลบคู่ที่ "+(index+1)+"? การดำเนินการนี้ย้อนกลับไม่ได้"))return;
-   b.disabled=true;
+  for(const v of [index+1,label,teamsById.get(match.team_a_id)||match.slot_a||"รอระบุทีม",
+   teamsById.get(match.team_b_id)||match.slot_b||"รอระบุทีม",fmt(match.status)])row.append(elem("td",v));
+  const td=elem("td"),wrap=elem("div","","action-row");
+  const edit=elem("button","แก้ไขคู่","btn");
+  edit.disabled=match.status!=="scheduled"||match.event_revision>0;
+  edit.onclick=()=>editMatch(match);
+  const del=elem("button","ลบ","btn danger");
+  del.disabled=match.status!=="scheduled"||match.event_revision>0;
+  del.setAttribute("aria-label","ลบคู่ที่ "+(index+1));
+  del.onclick=async()=>{
+   if(!confirm("ยืนยันลบคู่ที่ "+(index+1)+"? คู่ที่ยังไม่มีผลการแข่งขันจะถูกลบถาวร"))return;
+   del.disabled=true;
    try{await api("delete_match_draft",{p_match:match.id});await open(m.id,false);note("ลบคู่แข่งขันสำเร็จ")}
-   catch(e){note("ลบคู่ไม่สำเร็จ","error",e.message);b.disabled=false}
+   catch(e){note("ลบคู่ไม่สำเร็จ","error",readableError(e));del.disabled=false}
   };
-  td.append(b);row.append(td);tbody.append(row);
+  wrap.append(edit,del);
+  if(canAuto&&match.stage_id===base.id){
+   for(const direction of [-1,1]){
+    const button=elem("button",direction<0?"↑":"↓","btn");
+    button.title=direction<0?"ย้ายคู่ขึ้นหนึ่งลำดับ":"ย้ายคู่ลงหนึ่งลำดับ";
+    button.disabled=$("mgrAutoOrder").disabled;
+    button.onclick=()=>moveInSequence(match.id,direction);
+    wrap.append(button);
+   }
+  }
+  td.append(wrap);row.append(td);tbody.append(row);
  });
 }
+function clearMatchEdit(){
+ editingMatchId=null;
+ $("mgrAddMatchTitle").textContent="เพิ่มคู่แข่งขันในรอบที่เลือก";
+ $("mgrAddMatch").textContent="+ เพิ่มคู่ถัดไป";
+ $("mgrCancelMatchEdit").hidden=true;
+ $("mgrMatchStage").disabled=false;
+ $("mgrMatchTeamA").value="";$("mgrMatchTeamB").value="";
+ $("mgrMatchSlotA").value="";$("mgrMatchSlotB").value="";
+}
+function editMatch(match){
+ editingMatchId=match.id;
+ $("mgrAddMatchTitle").textContent="แก้ไขคู่แข่งขัน";
+ $("mgrAddMatch").textContent="บันทึกการแก้ไขคู่";
+ $("mgrCancelMatchEdit").hidden=false;
+ $("mgrMatchStage").value=match.stage_id;
+ $("mgrMatchStage").disabled=true;
+ $("mgrMatchTeamA").value=match.team_a_id||"";
+ $("mgrMatchTeamB").value=match.team_b_id||"";
+ $("mgrMatchSlotA").value=match.slot_a||"";
+ $("mgrMatchSlotB").value=match.slot_b||"";
+ $("mgrAddMatchTitle").scrollIntoView({behavior:"smooth",block:"center"});
+}
+$("mgrCancelMatchEdit").onclick=clearMatchEdit;
+$("mgrCreateStage").onclick=async()=>{
+ if(!current)return;
+ const title=$("mgrNewStageName").value.trim();
+ if(!title)return note("ระบุชื่อรอบการแข่งขันก่อน","error");
+ try{
+  await api("create_stage_manual",{p_tournament:current.id,p_title:title,p_type:$("mgrNewStageType").value});
+  const id=current.id;await open(id,false);$("mgrNewStageName").value="";
+  note("เพิ่มรอบการแข่งขันสำเร็จ","success",title);
+ }catch(e){note("เพิ่มรอบไม่สำเร็จ","error",readableError(e))}
+};
+$("mgrAddSemis").onclick=async()=>{
+ if(!current||!confirm("เพิ่มรอบรองชนะเลิศ 2 คู่ รอบชิงอันดับ 3 และรอบชิงชนะเลิศอีก 2 คู่?"))return;
+ const id=current.id;
+ try{await api("create_semis_and_final",{p_tournament:id});
+  await open(id,false);note("สร้างรอบรองและรอบชิงสำเร็จ","success","เพิ่มคู่รอผลจากรอบก่อน 4 คู่แล้ว");
+ }catch(e){note("สร้างรอบชิงไม่สำเร็จ","error",readableError(e))}
+};
+$("mgrAddMatch").onclick=async()=>{
+ if(!current)return;
+ const a=$("mgrMatchTeamA").value||null,b=$("mgrMatchTeamB").value||null,
+  slotA=$("mgrMatchSlotA").value.trim(),slotB=$("mgrMatchSlotB").value.trim();
+ if(a&&a===b)return note("ห้ามเลือกทีมเดียวกัน","error");
+ if((!a&&!slotA)||(!b&&!slotB))return note("ระบุผู้แข่งขันให้ครบ","error","หากยังไม่ทราบทีม กรุณาใส่ เช่น ผู้ชนะคู่ 1");
+ const id=current.id;const old=editingMatchId;
+ try{
+  if(old)await api("set_draft_match_teams",{p_match:old,p_team_a:a,p_team_b:b,p_slot_a:slotA,p_slot_b:slotB});
+  else await api("add_stage_match",{p_tournament:id,p_stage:$("mgrMatchStage").value,
+    p_team_a:a,p_team_b:b,p_slot_a:slotA,p_slot_b:slotB});
+  await open(id,false);
+  note(old?"แก้ไขคู่แข่งขันสำเร็จ":"เพิ่มคู่ถัดไปสำเร็จ");
+ }catch(e){note("บันทึกคู่แข่งขันไม่สำเร็จ","error",readableError(e))}
+};
+async function autoOrder(userTriggered=true){
+ if(!current)return;
+ const m=current,base=initialStage(m);
+ if(!base||!["group_round_robin","round_robin"].includes(m.competition_format))
+  return;
+ const groups=m.pools.filter(p=>p.stage_id===base.id)
+  .map(p=>({code:p.code,teams:m.assigned.filter(a=>a.pool_id===p.id).map(a=>a.team_id)}));
+ const pairings=m.matches.filter(x=>x.stage_id===base.id);
+ if(!pairings.length)return;
+ const plan=sequenceExisting(groups,pairings);
+ if(plan.ordered.length!==pairings.length)throw Error("จำนวนคู่ไม่ครบ ตรวจข้อมูลก่อนจัดลำดับ");
+ await api("save_pool_sequence",{p_tournament:m.id,p_match_ids:plan.ordered.map(x=>x.id),
+  p_rounds:plan.ordered.map(x=>x.round)});
+ await open(m.id,false);
+ if(userTriggered){
+  const gaps=analyzeOrder(plan.ordered);
+  note(gaps.hasAdjacent?"จัดลำดับแล้ว แต่ยังมีทีมลงสนามติดกัน":"จัดลำดับคู่แข่งขันสำเร็จ",
+   gaps.hasAdjacent?"warning":"success",
+   gaps.hasAdjacent?"พบ "+gaps.violations.length+" จุดที่ไม่สามารถหลีกเลี่ยงได้จากจำนวนคู่/สาย":
+    "กระจายคู่ตามรอบและสลับสายแล้ว ยังต้องกำหนดเวลาพักจริง");
+ }
+}
+$("mgrAutoOrder").onclick=async()=>{
+ $("mgrAutoOrder").disabled=true;
+ try{await autoOrder(true)}catch(e){note("จัดลำดับไม่สำเร็จ","error",readableError(e));$("mgrAutoOrder").disabled=false}
+};
+async function moveInSequence(id,step){
+ if(!current)return;
+ const m=current,base=initialStage(m);
+ if(!base)return;
+ const rows=sequenceMatches(m,base.id);
+ const at=rows.findIndex(x=>x.id===id),next=at+step;
+ if(next<0||next>=rows.length)return;
+ [rows[at],rows[next]]=[rows[next],rows[at]];
+ try{
+  await api("save_pool_sequence",{p_tournament:m.id,p_match_ids:rows.map(x=>x.id),
+   p_rounds:rows.map(x=>Number(x.round_number)||1)});
+  await open(m.id,false);
+  const warnings=analyzeOrder(rows);
+  note("ย้ายคู่แข่งขันแล้ว",warnings.hasAdjacent?"warning":"success",
+   warnings.hasAdjacent?"มีทีมแข่งติดกัน "+warnings.violations.length+" จุด กรุณาตรวจสอบอีกครั้ง":"ไม่พบคู่ที่ทีมลงติดกัน");
+ }catch(e){note("ย้ายคู่ไม่สำเร็จ","error",readableError(e))}
+}
+
 $("mgrRename").onclick=async()=>{
  if(!current)return;
  const name=$("mgrRenameName").value.trim();
@@ -177,7 +357,7 @@ $("mgrDeleteTournament").onclick=async()=>{
  if(!current)return;const name=current.name;
  if(!confirm("ยืนยันลบรายการ «"+name+"» พร้อมสายและคู่แข่งขันฉบับร่างทั้งหมด?\nการลบนี้ย้อนกลับไม่ได้"))return;
  try{await api("delete_tournament_draft",{p_tournament:current.id});current=null;$("mgrEditor").hidden=true;await reload();note("ลบรายการสำเร็จ","success",name)}
- catch(e){note("ลบรายการไม่สำเร็จ","error",e.message)}
+ catch(e){note("ลบรายการไม่สำเร็จ","error",readableError(e))}
 };
 $("mgrOpenScoresheet").onclick=()=>window.VBC?.navigate("scoresheet");
 db.auth.onAuthStateChange(()=>setTimeout(()=>authSync().catch(e=>note("โหลดข้อมูลบัญชีไม่สำเร็จ","error",e.message)),0));
