@@ -17,7 +17,14 @@ async function loadThaiFonts(){
 }
 function titleFont(){return $("gfxFont")?.value||"Anuphan"}
 const palettes={red:["#6b101b","#200a17","#edbd63"],blue:["#123662","#07142b","#ffca78"],black:["#232323","#080808","#d7bd85"]};
-function measureLine(text,maxWidth,size){ctx.font="700 "+size+"px "+titleFont()+",Prompt,sans-serif";let s=String(text);while(s.length>1&&ctx.measureText(s).width>maxWidth)s=s.slice(0,-2)+"…";return s}
+function measureLine(text,maxWidth,size){
+ ctx.font="700 "+size+"px "+titleFont()+",Prompt,sans-serif";
+ const segments=typeof Intl!=="undefined"&&Intl.Segmenter?
+  [...new Intl.Segmenter("th",{granularity:"grapheme"}).segment(String(text))].map(x=>x.segment):Array.from(String(text));
+ let out=segments.join("");
+ while(segments.length>1&&ctx.measureText(out).width>maxWidth){segments.pop();out=segments.join("")+"…"}
+ return out;
+}
 function paint(){
  const W=1080,H=$("gfxSize").value==="square"?1080:1920;canvas.width=W;canvas.height=H;
  const [a,b,gold]=palettes[$("gfxTheme").value],gradient=ctx.createLinearGradient(0,0,W,H);
