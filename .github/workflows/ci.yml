@@ -16,10 +16,11 @@ jobs:
         with:
           node-version: "22"
       - name: Volleyball rules tests
-        run: node --test tests/rules.test.mjs
+        run: node --test tests/*.test.mjs
       - name: Check browser JavaScript syntax
         run: |
           node --check online.js
+          node --check ux-core.js
           node --check tournament-manager.js
           node --check suite-core.js
           node --check official-ui.js
@@ -32,7 +33,7 @@ jobs:
           node - <<'NODE'
           const fs=require('node:fs');
           const html=fs.readFileSync('index.html','utf8');
-          for(const file of ['online.js','tournament-manager.js','suite-core.js','official-ui.js','draw-ui.js','graphics-ui.js','public-standings-ui.js','position-check.js','lib/volleyball-rules.mjs']){
+          for(const file of ['online.js','ux-core.js','design.css','tournament-manager.js','suite-core.js','official-ui.js','draw-ui.js','graphics-ui.js','public-standings-ui.js','position-check.js','lib/volleyball-rules.mjs']){
             if(!fs.existsSync(file))throw new Error('Missing '+file);
             if(file!=='suite-core.js' && file!=='lib/volleyball-rules.mjs' && !html.includes(file))throw new Error('Unlinked '+file);
           }
