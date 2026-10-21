@@ -90,9 +90,10 @@ function render(){
  const server=cur.services?.find(s=>s.set===selectedSet);
  const ready=cur.lineups.filter(l=>l.set===selectedSet&&[cur.team_a_id,cur.team_b_id].includes(l.team_id)).length===2;
  $("offServeInfo").textContent=server?"🏐 ฝ่ายเสิร์ฟปัจจุบัน: "+(server.team_id===cur.team_a_id?cur.team_a:cur.team_b):
-  ready?"เลือกฝ่ายเริ่มเสิร์ฟเซต "+selectedSet+" เพื่อเริ่มนับคะแนน":"กรอกและบันทึกตัวจริงทั้งสองทีมก่อน";
- const canChoose=cur.can_score&&!isLocked()&&ready&&selectedSet===currentSet()&&
- !cur.sets.some(s=>s.set===selectedSet&&(s.a>0||s.b>0));
+  ready?"เลือกฝ่ายเสิร์ฟ"+(cur.sets.some(x=>x.set===selectedSet&&(x.a>0||x.b>0))?"ปัจจุบันสำหรับเซตที่มีคะแนนอยู่แล้ว":"เริ่มต้นเซต "+selectedSet):
+  "กรอกและบันทึกตัวจริงทั้งสองทีมก่อน";
+ const hasScored=cur.sets.some(s=>s.set===selectedSet&&(s.a>0||s.b>0));
+ const canChoose=cur.can_score&&!isLocked()&&ready&&selectedSet===currentSet()&&(!hasScored||!server);
  $("offStartServeA").disabled=!canChoose;$("offStartServeB").disabled=!canChoose;
  for(const [code,team] of [["A",cur.team_a_id],["B",cur.team_b_id]]){
    const config=cur.liberos?.find(l=>l.set===selectedSet&&l.team_id===team);
@@ -129,7 +130,11 @@ async function save(){
  finally{busy=false}
 }
 async function command(action,payload={}){
- if(!cur||busy)return;busy=true;
+ if(!cur||busy)return;
+ if(action==="point"&&selectedSet!==currentSet())return notify("เลือกเซตที่กำลังแข่งขันก่อน","error");
+ if(action==="point"&&!cur.services?.some(x=>x.set===selectedSet))
+  return notify("เลือกฝ่ายเสิร์ฟก่อนบันทึกคะแนน","error","เลือกทีมที่กำลังเสิร์ฟ และกดปุ่มเริ่มเสิร์ฟบนสนาม");
+ busy=true;
  try{await api("official_match_command",{p_match:cur.id,p_expected:cur.revision,p_command:action,p_payload:payload});await openMatch(cur.id,true);
   if(action==="point")notify("บันทึกคะแนนแล้ว","success",cur.team_a+" "+$("offPoints0").textContent+" : "+$("offPoints1").textContent+" "+cur.team_b);
   else notify("บันทึกเหตุการณ์สำเร็จ");
