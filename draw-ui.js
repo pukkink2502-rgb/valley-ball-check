@@ -145,6 +145,6 @@ $("drawResume").onclick=async()=>{const id=$("drawSavedRooms").value;if(!id)retu
 };
 $("drawReload").onclick=listRooms;
 $("drawGoLogin").onclick=()=>window.VBC?.navigate("manager");
-$("drawGoTournament").onclick=()=>window.VBC?.navigate("manager");
+$("drawGoTournament").onclick=()=>{window.VBC?.navigate("manager");$("mgrReload")?.click()};
 db.auth.onAuthStateChange(()=>setTimeout(()=>listRooms().catch(console.warn),0));
 listRooms();
