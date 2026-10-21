@@ -140,15 +140,30 @@ async function build(){
   const {data:info,error:ei}=await db.from("teams").select("id,name").in("id",ids);
   if(ei)throw ei;const name=new Map(info.map(t=>[t.id,t.name]));
   const type=$("gfxType").value;
-  rows=type==="teams"?info.map((x,i)=>({a:x.name,b:"ทีม "+(i+1)})):matches.filter(m=>type==="fixtures"||m.status==="approved").map(m=>({
-   a:name.get(m.team_a_id)||"?",b:type==="results"?(name.get(m.team_b_id)||"?")+" ("+m.score_a_sets+"–"+m.score_b_sets+")":name.get(m.team_b_id)||"?"
+  resultMatches=matches.filter(m=>["approved","pending_approval"].includes(m.status)&&m.team_a_id&&m.team_b_id);
+  resultNames=name;
+  const before=$("gfxResultMatch").value;
+  opt($("gfxResultMatch"),resultMatches.map((m,i)=>({value:m.id,label:
+   "คู่ "+(i+1)+" · "+(name.get(m.team_a_id)||"?")+" พบ "+(name.get(m.team_b_id)||"?")+
+   " · "+m.score_a_sets+"–"+m.score_b_sets})),"เลือกคู่ที่มีผลการแข่งขัน");
+  if(resultMatches.some(x=>x.id===before))$("gfxResultMatch").value=before;
+  else if(resultMatches.length)$("gfxResultMatch").value=resultMatches[0].id;
+  if(type==="results"){
+   if(!resultMatches.length){selectedResult=null;paint();say("ยังไม่มีคู่ที่จบการแข่งขัน กราฟิกผลต้องใช้คะแนนที่บันทึกไว้จริง");return}
+   await selectedGraphicResult();toast("สร้างภาพผลการแข่งขันสำเร็จ");return;
+  }
+  selectedResult=null;
+  rows=type==="teams"?info.map((x,i)=>({a:x.name,b:"ทีม "+(i+1)})):matches.map(m=>({
+   a:name.get(m.team_a_id)||"รอทีม",b:name.get(m.team_b_id)||"รอทีม"
   }));
-  label=tournaments.find(t=>t.id===id)?.name||"รายการแข่งขัน";lastData={tournament_id:id,type,rows,created_at:new Date().toISOString()};
+  label=tournaments.find(t=>t.id===id)?.name||"รายการแข่งขัน";
+  lastData={tournament_id:id,type,rows,created_at:new Date().toISOString()};
   paint();say("สร้างภาพ "+rows.length+" รายการแล้ว");toast("สร้างภาพตัวอย่างสำเร็จ");
  }catch(e){say(e.message||"โหลดข้อมูลไม่สำเร็จ",true)}
 }
 $("gfxBuild").onclick=build;
-for(const id of ["gfxTitle","gfxSubtitle","gfxTheme","gfxSize","gfxLimit","gfxType","gfxFont"])$(id).addEventListener("input",paint);
+for(const id of ["gfxTitle","gfxSubtitle","gfxTheme","gfxSize","gfxLimit","gfxFont"])$(id).addEventListener("input",paint);
+$("gfxType").onchange=()=>{graphicsMode();if($("gfxTournament").value)build()};
 $("gfxLogo").onchange=async e=>{
  const f=e.target.files?.[0];if(!f)return;
  if(f.size>3e6){say("โลโก้ต้องเล็กกว่า 3 MB",true);return}
@@ -168,7 +183,7 @@ $("gfxPDF").onclick=async()=>{
 $("gfxSave").onclick=async()=>{
  if(!lastData){say("กรุณาสร้างโปสเตอร์จากรายการก่อน",true);return}
  try{
-  const user=await signedIn(),doc={...lastData,title:$("gfxTitle").value,subtitle:$("gfxSubtitle").value,theme:$("gfxTheme").value,size:$("gfxSize").value,limit:Number($("gfxLimit").value)};
+  const user=await signedIn(),doc={...lastData,title:$("gfxTitle").value,subtitle:$("gfxSubtitle").value,theme:$("gfxTheme").value,size:$("gfxSize").value,limit:Number($("gfxLimit").value),font:$("gfxFont").value};
   const size=$("gfxSize").value==="square"?1080:1920;
   const {error}=await db.from("graphics_projects").insert({tournament_id:lastData.tournament_id,created_by:user.id,title:doc.title.slice(0,150)||"Graphic",document:doc,width:1080,height:size});
   if(error)throw error;say("บันทึกการตั้งค่ากราฟิกลง Supabase แล้ว");toast("บันทึกแบบกราฟิกสำเร็จ");
@@ -183,9 +198,9 @@ $("gfxHistory").onclick=async()=>{
  for(const item of data){
   const b=elem("button",item.title+" · "+new Date(item.created_at).toLocaleDateString("th-TH"),"btn");
   b.onclick=()=>{
-   const d=item.document;lastData=d;rows=d.rows||[];label=tournaments.find(t=>t.id===id)?.name||"";
+   const d=item.document;lastData=d;rows=d.rows||[];selectedResult=d.result||null;label=tournaments.find(t=>t.id===id)?.name||"";
    $("gfxTitle").value=d.title||"";$("gfxSubtitle").value=d.subtitle||"";$("gfxTheme").value=d.theme||"red";
-   $("gfxSize").value=d.size||"portrait";$("gfxType").value=d.type||"fixtures";$("gfxLimit").value=d.limit||16;paint();
+   $("gfxSize").value=d.size||"portrait";$("gfxType").value=d.type||"fixtures";$("gfxLimit").value=d.limit||16;$("gfxFont").value=d.font||"Anuphan";graphicsMode();paint();
   };area.append(b);
  }
  say("โหลดแบบที่บันทึก "+data.length+" รายการ");
@@ -193,5 +208,5 @@ $("gfxHistory").onclick=async()=>{
 $("gfxReload").onclick=tournamentsLoad;
 db.auth.onAuthStateChange(()=>setTimeout(()=>tournamentsLoad().catch(e=>say(e.message,true)),0));
 tournamentsLoad();
-
+graphicsMode();
 loadThaiFonts();
