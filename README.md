@@ -50,3 +50,20 @@ Repository: `pukkink2502-rgb/valley-ball-check`
 - UI: `index.html` + `online.js`, `tournament-manager.js`, `official-ui.js`, `position-check.js`, `draw-ui.js`, `graphics-ui.js`, `public-standings-ui.js` and `suite-core.js`.
 
 Production branch is `main`; development branch is `development/v0.1`.
+
+
+## Competition formats, scheduling and user-controlled rounds
+
+Tournament Manager supports:
+- **Group round robin**: 1–4 pools, round robin *within each pool*; when 2 pools are used, the organizer may automatically add two semifinals, third-place and final with **unresolved participant placeholders**. The organizer explicitly resolves these placeholders to real teams when prior results are known.
+- **Complete round robin**: one pool where all teams play each other; aggregate standings are computed from approved results.
+- **Single elimination**: power-of-two entrants (2, 4, 8, 16, 32, 64), automatic successive rounds ending with a final. Match participants in later rounds are placeholders until qualified.
+- **Custom**: no default games; organizers create stages and pairs themselves.
+- **Extra stages and matches**: organizers can always add the next stage or pair to drafts and published tournaments. Draft pair participants are editable until scored.
+- **Fair pair sequencing**: round-robin pairings are arranged by rounds with cross-pool interleaving and back-to-back team warnings. When unavoidable because of group counts, this is reported rather than hidden. Manual up/down controls can adjust the original sequence in an unstarted draft.
+- **Time-level validation remains separate**: no algorithm can guarantee actual 45/60-minute rest without clocks, match durations and playing courts; the schedule-entry RPC checks court conflicts and the minimum rest period.
+- **Pool-specific standings**: group standings are separate for pools A–D, whereas round-robin matches are aggregated for a full round robin. Knockout matches do not contaminate league standings.
+
+Deletion now permits **draft tournaments with planned times but no scores or actual starts**, requiring confirmation; started/scored or published tournaments remain protected. This was changed to address `ACTIVE_MATCHES_CANNOT_DELETE` on safe drafts.
+
+All production publishes are gated by GitHub CI and a Supabase transaction-based integration test; real-device and live multi-user acceptance testing remains a separate validation step.
