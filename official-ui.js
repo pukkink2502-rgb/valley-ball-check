@@ -1,6 +1,6 @@
 import {db,$,elem,box,api,signedIn,opt} from "./suite-core.js";
 import {downloadScoresheet,printScoresheet} from "./scoresheet-report.js";
-import {courtForSet,isCoinTossSet,automaticFirstServer} from "./court-side-rules.mjs";
+import {courtForSet,isCoinTossSet,automaticFirstServer,courtScoreView,courtScoreMessage} from "./court-side-rules.mjs";
 
 const root=$("scoresheet");root.innerHTML="<div class=\"eyebrow\">สกอร์ชีตและตรวจตำแหน่ง</div>\n<h1>ควบคุมการแข่งขัน</h1><p>เลือกคู่แข่งขัน แล้วดูตำแหน่งผู้เล่นสองฝั่งได้ทันที กรอกหมายเลขเสื้อบนสนามและบันทึกแยกแต่ละเซต</p>\n<div class=\"card\"><div class=\"match-pick\"><label>1. เลือกรายการแข่งขัน<select id=\"offTournament\"></select></label>\n<label>2. เลือกคู่แข่งขัน<select id=\"offMatch\"></select></label>\n<button class=\"btn\" id=\"offReload\">↻ โหลดรายการ</button></div>\n<div class=\"actions\"><button class=\"btn\" id=\"offGoOrganizer\">ไปจัดการแข่งขัน</button></div>\n<p id=\"offStatus\" role=\"status\" class=\"small\"></p></div>\n<div id=\"offLoaded\" hidden>\n<div class=\"score-strip\" style=\"margin-top:16px\">\n<div class=\"score-side\"><strong id=\"offName0\">ทีม A</strong><span id=\"offPoints0\" class=\"score-pts\">0</span></div>\n<div class=\"score-sets\"><span id=\"offSetScore\">0 : 0</span><div style=\"font-size:11px\">เซตที่ชนะ</div></div>\n<div class=\"score-side\"><span id=\"offPoints1\" class=\"score-pts\">0</span><strong id=\"offName1\">ทีม B</strong></div>\n</div>\n<div class=\"card\" style=\"margin-top:13px\">\n<div class=\"section-head\"><div><h3>สนามและตำแหน่งผู้เล่น</h3><p id=\"offMeta\">เลือกแมตช์เพื่อเริ่ม</p></div><span class=\"drawing-badge\" id=\"offBadge\">ยังไม่แข่งขัน</span></div>\n<div class=\"set-tabs\" id=\"offSetTabs\" aria-label=\"เลือกเซต\"></div>\n<div class=\"serve-config\" id=\"offCourtSetSide\" style=\"margin-bottom:14px\">\n<h3>กำหนดฝั่งสนามจากผลการเสี่ยง</h3>\n<p id=\"offSideInfo\">เซตแรกและเซตตัดสินต้องเลือกว่าทีมใดอยู่ด้านซ้าย ก่อนเริ่มคะแนน</p>\n<div class=\"formrow\"><label>ทีมด้านซ้าย<select id=\"offLeftTeamSelect\"></select></label>\n<button id=\"offSideSave\" class=\"btn primary\">บันทึกทีมด้านซ้าย</button></div></div>\n<div class=\"serve-config\"><h3>ฝ่ายเริ่มเสิร์ฟ (เลือกเซตแรกและเซตตัดสินเท่านั้น)</h3><p id=\"offServeInfo\">บันทึกตัวจริง 6 คนทั้งสองทีม แล้วเลือกฝ่ายเสิร์ฟ</p>\n<div class=\"actions\"><button class=\"btn\" id=\"offStartServeA\">🏐 ทีมซ้ายเริ่มเสิร์ฟ</button><button class=\"btn\" id=\"offStartServeB\">🏐 ทีมขวาเริ่มเสิร์ฟ</button></div></div><div class=\"court-wrap\"><div class=\"court-half\"><div class=\"court-label\" id=\"courtNameA\">ทีม A</div><div class=\"court-positions\" id=\"offCourtA\" style=\"grid-template-columns:repeat(2,minmax(0,1fr))\"></div></div>\n<div class=\"net-center\" aria-label=\"ตาข่าย\">ตาข่าย</div>\n<div class=\"court-half\"><div class=\"court-label\" id=\"courtNameB\">ทีม B</div><div class=\"court-positions\" id=\"offCourtB\" style=\"grid-template-columns:repeat(2,minmax(0,1fr))\"></div></div></div>\n<div class=\"section-head\"><p class=\"mobile-note\" id=\"offCourtHint\">แตะช่องหมายเลขในสนามเพื่อกรอกตำแหน่งได้เลย</p>\n<button class=\"btn primary\" id=\"offSaveBoth\">✓ บันทึกตำแหน่งเซตนี้</button></div>\n</div>\n<div class=\"card\" style=\"margin-top:14px\"><div class=\"section-head\"><div><h3>ควบคุมคะแนน</h3><p id=\"offSetHistory\"></p></div><span id=\"offMatchId\" class=\"small\"></span></div>\n<div class=\"actions\" id=\"offActions\"><button class=\"btn primary\" id=\"offPointA\">+ แต้มทีมซ้าย</button><button class=\"btn primary\" id=\"offPointB\">+ แต้มทีมขวา</button>\n<button class=\"btn\" id=\"offTimeoutA\">เวลานอกทีมซ้าย</button><button class=\"btn\" id=\"offTimeoutB\">เวลานอกทีมขวา</button>\n</div>\n\n</div>\n<div class=\"card\" style=\"margin-top:14px\" id=\"offReportPanel\">\n<div class=\"section-head\"><div><h3>สกอร์ชีต PDF แนวนอน · ตารางคะแนนรายแต้ม</h3>\n<p>เลือกคู่แข่งขันแล้วดาวน์โหลดรายงานได้ทันที มีคะแนนทุกเซต ผู้เล่น และช่องลายเซ็น ไม่ต้องมีบัญชีผู้รับรองอีกคน</p></div></div>\n<div class=\"formrow\"><label>ชื่อผู้บันทึก / เจ้าหน้าที่ (ไม่บังคับ)\n<input id=\"offOfficialName\" maxlength=\"140\" placeholder=\"พิมพ์ชื่อสำหรับแสดงในรายงาน หรือเว้นว่างเพื่อเขียนด้วยปากกา\"></label></div>\n<details><summary style=\"cursor:pointer;font-weight:600\">เซ็นบนหน้าจอ (ไม่บังคับ)</summary>\n<p>ใช้เมาส์หรือนิ้วเขียนลายเซ็นลงบนพื้นที่ด้านล่าง หรือเว้นว่างแล้วเซ็นหลังพิมพ์ออกกระดาษ</p>\n<canvas id=\"offSignatureCanvas\" width=\"540\" height=\"150\" style=\"width:100%;max-width:540px;height:150px;touch-action:none;border:1px solid var(--u-line);border-radius:10px;background:white\" aria-label=\"ลายเซ็นเจ้าหน้าที่\"></canvas>\n<div class=\"actions\"><button id=\"offClearSignature\" type=\"button\" class=\"btn\">ล้างลายเซ็น</button></div>\n</details>\n<div class=\"actions\" style=\"margin-top:14px\">\n<button class=\"btn primary\" id=\"offDownloadPdf\">↓ ดาวน์โหลด PDF แนวนอน · ทุกเซต</button>\n<button class=\"btn\" id=\"offPrintPdf\">พิมพ์รายงาน / เซ็นกระดาษ</button>\n<button class=\"btn\" id=\"offApprove\" hidden>✓ ปิดผลการแข่งขัน (บัญชีนี้)</button>\n</div><p class=\"small\" id=\"offReportStatus\" role=\"status\">รายงานสร้างจากข้อมูลที่บันทึกจริง ไม่จำเป็นต้องปิดผลก่อนส่งออก</p>\n</div><div class=\"card\" style=\"margin-top:14px\"><h3>เปลี่ยนตัวด้วยหมายเลขเสื้อ</h3>\n<p>แตะหมายเลขผู้เล่นในสนามเพื่อเลือกคนออก แล้วพิมพ์เบอร์คนเข้า กดยืนยันได้เลย ไม่ต้องกรอกชื่อ</p>\n<div class=\"formrow\"><label>ทีม<select id=\"offTeamChoice\"><option value=\"0\">ทีมซ้าย</option><option value=\"1\">ทีมขวา</option></select></label>\n<label>เบอร์คนออก<input id=\"offOut\" maxlength=\"3\" inputmode=\"numeric\" placeholder=\"แตะในสนาม\"></label>\n<label>เบอร์คนเข้า<input id=\"offIn\" maxlength=\"3\" inputmode=\"numeric\" placeholder=\"เบอร์สำรอง\"></label></div>\n<button class=\"btn primary\" id=\"offSubstitute\">↔ ยืนยันเปลี่ยนตัว</button></div>\n<div class=\"card\" style=\"margin-top:14px\"><h3>ตั้งค่า Libero แยกแต่ละทีมและเซต</h3><p>กำหนดหมายเลข Libero กับหมายเลขที่จะแทน ใช้ปุ่มส่งลงสนามหรือออกจากสนาม</p><div class=\"two\">\n<div class=\"libero-team-card\"><h3 id=\"offLiberoNameA\">ทีม A</h3><label>เบอร์ Libero<input id=\"offLiberoNumberA\" maxlength=\"3\" inputmode=\"numeric\"></label><label>เบอร์ผู้เล่นที่จะถูกแทน<input id=\"offLiberoReplaceA\" maxlength=\"3\" inputmode=\"numeric\"></label>\n<div class=\"actions\"><button class=\"btn\" id=\"offConfigureLiberoA\">บันทึก Libero</button><button class=\"btn primary\" id=\"offToggleLiberoA\">ส่งลงสนาม</button></div><p class=\"small\" id=\"offLiberoStatusA\"></p></div>\n<div class=\"libero-team-card\"><h3 id=\"offLiberoNameB\">ทีม B</h3><label>เบอร์ Libero<input id=\"offLiberoNumberB\" maxlength=\"3\" inputmode=\"numeric\"></label><label>เบอร์ผู้เล่นที่จะถูกแทน<input id=\"offLiberoReplaceB\" maxlength=\"3\" inputmode=\"numeric\"></label>\n<div class=\"actions\"><button class=\"btn\" id=\"offConfigureLiberoB\">บันทึก Libero</button><button class=\"btn primary\" id=\"offToggleLiberoB\">ส่งลงสนาม</button></div><p class=\"small\" id=\"offLiberoStatusB\"></p></div>\n</div></div>\n<details class=\"card\" style=\"margin-top:14px\"><summary style=\"cursor:pointer;font-weight:600\">ตัวเลือกเพิ่มเติม: เจ้าหน้าที่ ชื่อผู้เล่น และบันทึกเหตุการณ์</summary>\n<div class=\"two\" style=\"margin-top:16px\"><div><h3>ชื่อผู้เล่น (ไม่บังคับ)</h3><textarea id=\"offRosterInput\" rows=\"4\" placeholder=\"1,ชื่อนักกีฬา&#10;7,ชื่อนักกีฬา\"></textarea><button class=\"btn\" id=\"offSaveRoster\">บันทึกชื่อเพิ่มเติม</button><p>ใช้เฉพาะหมายเลขเสื้อก็ได้</p></div>\n<div><label>เหตุผล/หมายเหตุ<input id=\"offReason\"></label><button class=\"btn\" id=\"offSanction\">บันทึกเหตุการณ์ลงโทษ</button>\n<label>อีเมลเจ้าหน้าที่<input id=\"offOfficerEmail\" type=\"email\"></label>\n<label>บทบาท<select id=\"offOfficerRole\"><option value=\"scorekeeper\">ผู้บันทึกคะแนน</option><option value=\"approver\">ผู้รับรองผล</option><option value=\"designer\">ผู้ออกแบบ</option></select></label><button class=\"btn\" id=\"offAssign\">เพิ่มเจ้าหน้าที่</button></div></div></details>\n<details class=\"card\" style=\"margin-top:14px\"><summary style=\"cursor:pointer;font-weight:600\">ประวัติเหตุการณ์ทั้งหมด</summary>\n<div class=\"tablewrap\" style=\"margin-top:12px\"><table><thead><tr><th>#</th><th>เซต</th><th>เหตุการณ์</th><th>เวลา</th><th>ข้อมูล</th></tr></thead><tbody id=\"offLog\"></tbody></table></div></details>\n</div>";
 let cur=null,items=[],selectedSet=1,busy=false,dirty=false;
@@ -57,14 +57,16 @@ function isLocked(){return ["approved","pending_approval","void"].includes(cur.s
 const courtNow=()=>{
  const side=courtForSet(cur,selectedSet);
  if(side)return side;
- // Existing scored matches lack pre-migration side records; do not block them.
- const played=(cur?.sets||[]).some(s=>Number(s.a)>0||Number(s.b)>0);
- if(!Array.isArray(cur?.court_sides)||played)
+ // A historical match with no toss records remains readable/editable in explicit legacy mode.
+ // Having points in *a previous set* must never bypass the deciding-set toss.
+ const hasAnyToss=Array.isArray(cur?.court_sides)&&cur.court_sides.length>0;
+ const selectedAlreadyScored=(cur?.sets||[]).some(x=>Number(x.set)===Number(selectedSet)&&(Number(x.a)>0||Number(x.b)>0));
+ if(!hasAnyToss||selectedAlreadyScored)
   return cur?.team_a_id&&cur?.team_b_id?{left:cur.team_a_id,right:cur.team_b_id,legacy:true,decidingSwitched:false}:null;
  return null;
 };
 const sideTeamId=side=>{const c=courtNow();return c?(side==="a"?c.left:c.right):null};
-const teamIndex=side=>sideTeamId(side)===cur?.team_a_id?0:1;
+const teamIndex=side=>{const id=sideTeamId(side);return id===cur?.team_a_id?0:id===cur?.team_b_id?1:-1};
 const teamName=id=>id===cur?.team_a_id?cur?.team_a:id===cur?.team_b_id?cur?.team_b:"รอเลือกฝั่ง";
 const courtReady=()=>!!courtNow();
 
@@ -79,9 +81,9 @@ function render(){
  $("offName1").textContent=court?teamName(court.right):(cur.team_b||"ทีม B");
  $("courtNameA").textContent=court?teamName(court.left):"ยังไม่ได้เลือกทีมด้านซ้าย";
  $("courtNameB").textContent=court?teamName(court.right):"ยังไม่ได้เลือกทีมด้านขวา";
- const current=cur.sets?.find(s=>s.set===selectedSet);
- $("offPoints0").textContent=court?.left===cur.team_b_id?(current?.b??0):(current?.a??0);
- $("offPoints1").textContent=court?.right===cur.team_a_id?(current?.a??0):(current?.b??0);
+ const board=courtScoreView(cur,selectedSet,court);
+ $("offPoints0").textContent=board?.left.points??0;
+ $("offPoints1").textContent=board?.right.points??0;
  $("offPointA").textContent="+ แต้ม "+teamName(court?.left);
  $("offPointB").textContent="+ แต้ม "+teamName(court?.right);
  $("offTimeoutA").textContent="เวลานอก "+teamName(court?.left);
@@ -187,13 +189,23 @@ async function save(){
 async function command(action,payload={}){
  if(!cur||busy)return;
  if(action==="point"&&selectedSet!==currentSet())return notify("เลือกเซตที่กำลังแข่งขันก่อน","error");
- if(action==="point"&&!courtReady())return notify("กรุณาเลือกฝั่งสนามก่อน","error");
+ if(["point","timeout"].includes(action)&&(!courtReady()||![0,1].includes(payload.team)))
+  return notify("กรุณาตรวจสอบว่าทีมซ้าย–ขวาถูกกำหนดแล้ว","error");
  if(action==="point"&&!cur.services?.some(x=>x.set===selectedSet))
   return notify("เลือกฝ่ายเสิร์ฟก่อนบันทึกคะแนน","error","เลือกทีมที่กำลังเสิร์ฟ และกดปุ่มเริ่มเสิร์ฟบนสนาม");
+ const scoredSet=selectedSet;
  busy=true;
- try{await api("official_match_command",{p_match:cur.id,p_expected:cur.revision,p_command:action,p_payload:payload});await openMatch(cur.id,true);
-  if(action==="point"&&cur.status==="live"&&selectedSet!==currentSet()){selectedSet=currentSet();render();void ensureAutomaticSetService()}
-  if(action==="point")notify("บันทึกคะแนนแล้ว","success",cur.team_a+" "+$("offPoints0").textContent+" : "+$("offPoints1").textContent+" "+cur.team_b);
+ try{
+  await api("official_match_command",{p_match:cur.id,p_expected:cur.revision,p_command:action,p_payload:payload});
+  await openMatch(cur.id,true);
+  // Build the notification from the SAME team-ID-to-court mapping as the visible scoreboard.
+  // Never prepend canonical team A to the LEFT-side point count.
+  const message=action==="point"?courtScoreMessage(cur,scoredSet,courtForSet(cur,scoredSet)||
+   (courtNow()?.legacy?{left:cur.team_a_id,right:cur.team_b_id}:null)):null;
+  if(action==="point"&&cur.status==="live"&&selectedSet!==currentSet()){
+   selectedSet=currentSet();render();void ensureAutomaticSetService();
+  }
+  if(action==="point")notify("บันทึกคะแนนแล้ว","success",message||"บันทึกคะแนนให้ทีมที่เลือกเรียบร้อย");
   else notify("บันทึกเหตุการณ์สำเร็จ");
  }catch(e){notify("ไม่สามารถบันทึกได้","error",errText(e));await openMatch(cur.id,true)}
  finally{busy=false}
