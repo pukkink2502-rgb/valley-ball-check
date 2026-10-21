@@ -1,25 +1,39 @@
-# Valley Ball Check
+# Valley Ball Check — Development v0.1
 
-หน้าเว็บไซต์เริ่มต้น (static HTML) สำหรับยืนยันการเชื่อมต่อ GitHub → Vercel โดยยังไม่สร้างฐานข้อมูลหรือเปิดใช้ฟังก์ชันการแข่งขันจริง
+Development branch: `development/v0.1`.
 
-## Supabase ที่อนุญาตสำหรับระบบนี้
+## Preview deployment
 
-- Project ref: `rwnvlxwdorsrxjuepcxp`
-- API URL: `https://rwnvlxwdorsrxjuepcxp.supabase.co`
-- แยกจาก BNK School OS และ Volleyball Jersey Pre-order อย่างเด็ดขาด
+- Vercel preview: https://valley-ball-check-eqb4v1x8e-pukkink.vercel.app
+- GitHub commit of functional page: `75507faedd36b30944ab262875f28703f8195197`.
+- Git integration auto-builds new previews when this branch changes.
+- Vercel Deployment Protection / SSO may require signing in as an authorized project member.
+- This is **not** the production website. `main` is unchanged.
 
-ตอนนี้เว็บไซต์ **ยังไม่มีการเรียก API ฐานข้อมูล** หรือใช้ publishable/secret key ใด ๆ การพัฒนาฐานข้อมูลและสิทธิ์ RLS จะทำเมื่อกำหนดความต้องการของระบบจริงแล้วเท่านั้น
+## Functional local-only MVP
 
-## วิธีเริ่มใช้
+- Responsive dashboard and navigation in Thai.
+- Best-of-3 (25/25/15) and best-of-5 (25/25/25/25/15), 2-point margin.
+- Manual score controls, set/match detection, undo, team naming, display-side swap, deciding-set side-switch prompt, fullscreen.
+- Browser-local autosave using `localStorage` (no cross-device synchronization).
+- Tournament draft grouping (1–4 groups, 2–64 teams), round-robin fixtures, CSV export with spreadsheet-injection mitigation.
 
-1. ใน GitHub Repository `pukkink2502-rgb/valley-ball-check` คลิก **Add file → Upload files** แล้วอัปโหลด `index.html` และ `README.md` ไว้ที่ root ของ repository
-2. กด **Commit changes** ไปที่สาขา `main`
-3. ไปที่ **Vercel → valley-ball-check → Settings → Git** แล้วเชื่อม Repository `pukkink2502-rgb/valley-ball-check` (หากไม่ได้รับสิทธิ์ ให้ตรวจ GitHub App permissions ในบัญชี GitHub)
-4. ใช้ Framework Preset `Other` และ Root Directory `/` (ไม่มี build command และไม่มี output directory)
-5. หลังเชื่อม Git แล้วจึง Deploy โปรเจกต์; ต้องเห็นหน้าเริ่มต้นที่ `valley-ball-check.vercel.app`
+## Not implemented yet
 
-## ข้อควรระวัง
+- Cloud Guest sessions, live viewer/control/recovery links, server-side retention and rate limits.
+- Official FIVB scoresheet, Libero/substitution/rotation rules, approvals, official standings.
+- Verified Live Draw, multi-court scheduling, audit trail, PDF/graphic editor.
+- Supabase integration/authentication and production release.
 
-- อย่าอัปโหลด `.env.local`, `sb_secret_` หรือ `service_role` keys ไปบน GitHub
-- ก่อนเปิดระบบฐานข้อมูลจริง ต้องกำหนด Auth/RLS และสิทธิ์ตารางให้รัดกุม
-- โปรเจกต์ Vercel ที่มีอยู่แล้วไม่จำเป็นต้องสร้างซ้ำ
+Do not rely on this MVP for official tournament records: the scores are stored in the current browser only and are lost if local storage is cleared. Browser storage is not the 30-day Guest retention system described in the specification.
+
+## Supabase
+
+Dedicated project ref: `rwnvlxwdorsrxjuepcxp` (not the unrelated preorder project). Five foundation tables have been created with RLS: `profiles`, `tournaments`, `teams`, `tournament_teams`, `tournament_members`. The MVP frontend does not access them.
+
+## Release checklist
+
+1. Run real-browser usability tests on Android and desktop.
+2. Verify preview access and static asset loading.
+3. Build secure Guest backend with scoped permissions, tokens, auditability and expiry.
+4. Complete acceptance tests and authorise production release. Never merge to `main` without validation.
