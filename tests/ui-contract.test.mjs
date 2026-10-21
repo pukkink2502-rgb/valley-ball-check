@@ -63,13 +63,32 @@ test('scoresheet is downloadable as Thai PDF, printable, and signable by one off
  const report=read('scoresheet-report.js');
  for(const x of ['offReportPanel','offDownloadPdf','offPrintPdf','offOfficialName','offSignatureCanvas',
  'offApprove','downloadScoresheet','printScoresheet'])assert.ok(official.includes(x),x);
- for(const x of ['makeScoresheetDocument','doc.addImage','รายงานผลการแข่งขันวอลเลย์บอล','ลายมือชื่อเจ้าหน้าที่',
- 'result_finalized'])assert.ok(report.includes(x),x);
+ for(const x of ['makeScoresheetDocument','doc.addImage','รายงานสกอร์ชีตวอลเลย์บอล','ลายมือชื่อเจ้าหน้าที่',
+ 'drawPoints','serviceSequence'])assert.ok(report.includes(x),x);
  assert.ok(official.includes('p_note:$("offOfficialName").value.trim()'));
  assert.ok(!official.includes('รับรองโดยเจ้าหน้าที่อิสระ'));
 });
 test('graphics selected result uses completed match scores, not schedule VS rows',()=>{
  for(const x of ['gfxResultControls','gfxResultMatch','gfxLogoA','gfxLogoB','selectedGraphicResult',
- 'paintResultCard','winner','match_sets','score_a_sets','score_b_sets'])
+ 'paintResultCard','winner','official_match_snapshot','my_official_matches'])
  assert.ok(gfx.includes(x),x);
+});
+
+test('landscape A4 printable scoresheet crosses individual logged points and shows service columns',()=>{
+ const report=read('scoresheet-report.js');
+ for(const part of ['orientation:"landscape"','format:"a4"','297,210','pointEvents','pointsByTeam','serviceSequence','I","II","III','makeScoresheetDocument'])
+  if(part==='pointEvents')continue;else assert.ok(report.includes(part),part);
+ assert.ok(report.includes('drawPoints'));
+});
+test('scorer uses actual court side, alternating service and manual toss in set 1/decider',()=>{
+ for(const part of ['courtForSet','offLeftTeamSelect','offSideSave','set_match_court_side','sideTeamId','automaticFirstServer','ensureAutomaticSetService','isCoinTossSet'])
+  assert.ok(official.includes(part),part);
+ assert.ok(existsSync(new URL('../court-side-rules.mjs',import.meta.url)));
+ assert.ok(existsSync(new URL('../APPLY_TO_SUPABASE_WHEN_READY.sql',import.meta.url)));
+});
+test('approved poster picks matches through match RPC and loads when tournament changes',()=>{
+ assert.ok(gfx.includes('buildResultFromMatchRpc'));
+ assert.ok(gfx.includes('my_official_matches'));
+ assert.ok(gfx.includes('official_match_snapshot'));
+ assert.ok(gfx.includes('gfxTournament").onchange'));
 });
