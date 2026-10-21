@@ -1,8 +1,26 @@
 import {db,$,elem,api} from "./suite-core.js";
+import {sequenceExisting,analyzeOrder} from "./lib/fixture-planner.mjs";
 
 const root=$("manager");root.innerHTML="<div class=\"eyebrow\">จัดการรายการแข่งขัน</div>\n<h1>รายการแข่งขันของฉัน</h1><p>สร้างรายการเพียงครั้งเดียว แล้วจัดทีม แบ่งสาย แก้ไขคู่แข่งขัน และเข้าสกอร์ชีตจากรายการเดียวกันได้</p>\n<div id=\"mgrGuest\" class=\"card\"><h3>เข้าสู่ระบบผู้จัดการแข่งขัน</h3>\n<p>เข้าสู่ระบบเพื่อดูและจัดการรายการที่บันทึกไว้</p>\n<div class=\"formrow\"><label>อีเมล<input type=\"email\" id=\"mgrEmail\" autocomplete=\"email\" placeholder=\"อีเมลของคุณ\"></label>\n<label>รหัสผ่าน<input type=\"password\" id=\"mgrPassword\" autocomplete=\"current-password\" placeholder=\"รหัสผ่านอย่างน้อย 6 ตัวอักษร\"></label></div>\n<div class=\"actions\"><button class=\"btn primary\" id=\"mgrSignIn\">เข้าสู่ระบบ</button><button class=\"btn\" id=\"mgrSignUp\">สมัครบัญชีใหม่</button></div>\n</div>\n<div id=\"mgrSignedIn\" hidden>\n<div class=\"card\" style=\"margin-bottom:16px\"><div class=\"section-head\"><span>เข้าสู่ระบบในชื่อ <strong id=\"mgrUser\"></strong></span>\n<button class=\"btn\" id=\"mgrSignOut\">ออกจากระบบ</button></div></div>\n<div class=\"wizard-head\"><span class=\"wizard-pill current\">1. สร้างรายการ</span><span class=\"wizard-pill\">2. จัดทีมและสาย</span><span class=\"wizard-pill\">3. คู่แข่งขัน</span><span class=\"wizard-pill\">4. สกอร์ชีต</span></div>\n<div class=\"two\">\n<div class=\"card\"><h3>สร้างรายการใหม่</h3><p class=\"small\">เลือกรูปแบบก่อน ระบบจะสร้างรอบและคู่ตามเงื่อนไขที่เลือก</p>\n<label>ชื่อรายการ<input id=\"mgrTournamentName\" maxlength=\"140\" placeholder=\"ตัวอย่าง: วอลเลย์บอลหญิง อบต.สบเปิง\"></label>\n<label>รายชื่อทีม (1 ทีมต่อบรรทัด)</label>\n<textarea id=\"mgrTeams\" rows=\"7\" placeholder=\"ทีม A&#10;ทีม B&#10;ทีม C&#10;ทีม D\"></textarea>\n<label>รูปแบบการแข่งขัน<select id=\"mgrCompetitionFormat\">\n<option value=\"group_round_robin\">แบ่งสาย พบกันหมดในแต่ละสาย</option>\n<option value=\"round_robin\">พบกันหมดทุกทีม (สายเดียว)</option>\n<option value=\"knockout\">แพ้คัดออกจนถึงรอบชิง</option>\n<option value=\"custom\">กำหนดคู่และรอบด้วยตัวเอง</option>\n</select></label><p class=\"small\" id=\"mgrFormatHelp\"></p>\n<div class=\"formrow\"><label>จำนวนสาย<select id=\"mgrGroupCount\"><option value=\"1\">1 สาย</option><option value=\"2\" selected>2 สาย</option><option value=\"3\">3 สาย</option><option value=\"4\">4 สาย</option></select></label>\n<label>รูปแบบ<select id=\"mgrBestOf\"><option value=\"3\">2 ใน 3 เซต</option><option value=\"5\">3 ใน 5 เซต</option></select></label></div>\n<label id=\"mgrPlayoffsLabel\" style=\"display:flex;gap:8px;align-items:center;margin-top:10px\">\n<input id=\"mgrPlayoffs\" type=\"checkbox\" checked style=\"min-height:unset;width:auto\">\nสร้างรอบรองชนะเลิศ ชิงอันดับ 3 และชิงชนะเลิศอัตโนมัติ (เมื่อแบ่ง 2 สาย)\n</label><div class=\"actions\"><button class=\"btn primary\" id=\"mgrCreate\">บันทึกและเปิดจัดการรายการ</button></div></div>\n<div class=\"card\"><div class=\"section-head\"><h3>รายการที่บันทึกแล้ว</h3><button class=\"btn\" id=\"mgrReload\">↻ รีเฟรช</button></div>\n<div id=\"mgrList\"><p>ยังไม่มีรายการแข่งขัน</p></div></div></div>\n<div class=\"card\" id=\"mgrEditor\" hidden style=\"margin-top:16px\">\n<div class=\"section-head\"><div><div class=\"eyebrow\">รายการที่เลือก</div><h2 id=\"mgrSelectedTitle\"></h2><p id=\"mgrSelectedMeta\"></p></div>\n<div class=\"action-row\"><button class=\"btn\" id=\"mgrOpenScoresheet\">ไปสกอร์ชีต →</button><button class=\"btn danger\" id=\"mgrDeleteTournament\">ลบรายการนี้</button></div></div>\n<div class=\"formrow\"><label>แก้ไขชื่อรายการ<input id=\"mgrRenameName\"></label><button class=\"btn\" id=\"mgrRename\">บันทึกชื่อใหม่</button></div>\n<h3 style=\"margin-top:21px\">ทีมและสายการแข่งขัน</h3><p>เลือกสายของแต่ละทีมได้ทันที ระบบจะบันทึกการย้ายและปรับคู่ในฉบับร่าง</p>\n<div id=\"mgrPoolTeams\" style=\"display:grid;gap:8px\"></div>\n<div class=\"card\" style=\"margin-top:20px;padding:18px!important\">\n<div class=\"section-head\"><h3>รอบการแข่งขันทั้งหมด</h3>\n<button class=\"btn\" id=\"mgrAddSemis\">สร้างรองชนะเลิศ / ชิงอันดับ 3 / ชิงชนะเลิศ</button></div>\n<div id=\"mgrStageList\"></div>\n<div class=\"formrow\">\n<label>ชื่อรอบใหม่<input id=\"mgrNewStageName\" maxlength=\"120\" placeholder=\"ตัวอย่าง: รอบ 8 ทีม / รอบแก้ตัว\"></label>\n<label>ประเภทรอบ<select id=\"mgrNewStageType\">\n<option value=\"knockout\">แพ้คัดออก / รอบชิง</option><option value=\"round_robin\">พบกันหมด / เก็บคะแนน</option><option value=\"pool\">แบ่งสาย</option>\n</select></label>\n<button class=\"btn\" id=\"mgrCreateStage\">+ เพิ่มรอบการแข่งขัน</button></div>\n<p class=\"small\">เพิ่มรอบได้ตามต้องการ ระบบไม่จำกัดว่าต้องจบหลังรอบแบ่งสาย</p></div>\n<div class=\"card\" style=\"margin-top:15px;padding:18px!important\">\n<h3 id=\"mgrAddMatchTitle\">เพิ่มคู่แข่งขันในรอบที่เลือก</h3>\n<div class=\"formrow\"><label>เลือกรอบ<select id=\"mgrMatchStage\"></select></label>\n<label>ทีมแรก<select id=\"mgrMatchTeamA\"></select></label><label>ทีมที่สอง<select id=\"mgrMatchTeamB\"></select></label></div>\n<div class=\"formrow\">\n<label>หากทีมแรกยังไม่ทราบ ให้ระบุช่องรอผล<input id=\"mgrMatchSlotA\" placeholder=\"เช่น ผู้ชนะรอบ 8 ทีม คู่ 1\"></label>\n<label>หากทีมที่สองยังไม่ทราบ ให้ระบุช่องรอผล<input id=\"mgrMatchSlotB\" placeholder=\"เช่น อันดับ 2 สาย A\"></label>\n</div><div class=\"actions\"><button class=\"btn primary\" id=\"mgrAddMatch\">+ เพิ่มคู่ถัดไป</button>\n<button class=\"btn\" id=\"mgrCancelMatchEdit\" hidden>ยกเลิกแก้ไข</button></div>\n<p class=\"small\">เลือกชื่อทีมจริง หรือเลือก “รอผลจากรอบก่อน” แล้วกรอกตำแหน่งทีมที่จะเข้ารอบ</p>\n</div>\n<div class=\"section-head\" style=\"margin-top:20px\"><h3>โปรแกรมการแข่งขันทุกคู่</h3>\n<button class=\"btn\" id=\"mgrAutoOrder\">จัดลำดับคู่พบกันหมดให้พักสลับกัน</button></div>\n<p id=\"mgrOrderReport\" class=\"small\"></p><p>คู่ที่ยังไม่เริ่มแข่งขันสามารถแก้ไขหรือลบได้ ส่วนผลแข่งขันที่บันทึกไว้จะถูกป้องกัน</p>\n<div class=\"tablewrap\"><table><thead><tr><th>ลำดับ</th><th>รอบ / สาย</th><th>ทีมแรก</th><th>ทีมที่สอง</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id=\"mgrMatches\"></tbody></table></div>\n</div></div><p id=\"mgrStatus\" class=\"small\" role=\"status\"></p>";
 const note=(msg,type="success",detail="")=>window.VBC?.notify(msg,type,detail);
-let identity=null,current=null,waiting=false,tournamentList=[];
+let identity=null,current=null,waiting=false,tournamentList=[],editingMatchId=null;
+const formatName={group_round_robin:"แบ่งสายแล้วพบกันหมด",round_robin:"พบกันหมดทุกทีม",knockout:"แพ้คัดออก",custom:"กำหนดรอบและคู่เอง"};
+const readableError=e=>{
+ const k=e?.message||String(e);
+ return ({ACTIVE_MATCHES_CANNOT_DELETE:"มีคู่แข่งขันที่กำหนดไว้หรือมีข้อมูลการแข่งขัน",
+ HAS_RECORDED_MATCHES:"มีการแข่งขันที่เริ่มแล้วหรือมีคะแนนบันทึกไว้ จึงไม่สามารถลบทั้งรายการได้",
+ ONLY_DRAFT_CAN_DELETE:"ลบได้เฉพาะรายการฉบับร่างที่ยังไม่เผยแพร่",
+ MATCH_ALREADY_STARTED:"คู่นี้เริ่มบันทึกคะแนนแล้ว ไม่สามารถลบทิ้งได้",
+ SCHEDULED_OR_STARTED_MATCHES_LOCK_ORDER:"มีคู่ที่กำหนดเวลาไว้หรือเริ่มแข่งแล้ว ระบบจะไม่เปลี่ยนลำดับโดยอัตโนมัติ",
+ SEQUENCE_MUST_CONTAIN_EVERY_POOL_MATCH_ONCE:"จำนวนคู่รอบแบ่งสายไม่ตรงกัน กรุณาโหลดรายการใหม่ก่อนจัดลำดับ",
+ KNOCKOUT_REQUIRES_POWER_OF_TWO:"แพ้คัดออกแบบอัตโนมัติต้องมี 2, 4, 8, 16, 32 หรือ 64 ทีม",
+ TWO_POOLS_REQUIRED:"รอบรองชนะเลิศอัตโนมัติรองรับรายการที่แบ่ง 2 สาย",
+ AUTO_PLAYOFFS_REQUIRES_TWO_POOLS:"เลือกสร้างรอบรองอัตโนมัติได้เมื่อแบ่ง 2 สายเท่านั้น",
+ KNOCKOUT_ALREADY_EXISTS:"สร้างรอบแพ้คัดออกแล้ว ไม่สามารถสร้างซ้ำได้",
+ OWNER_REQUIRED:"รายการนี้ไม่ใช่ของบัญชีคุณ",
+ MATCH_LOCKED:"คู่นี้เริ่มแข่งขันหรือถูกล็อกแล้ว"}[k]||k);
+};
+
 const status=message=>$("mgrStatus").textContent=message;
 const thaiStatus={draft:"ฉบับร่าง",published:"เผยแพร่แล้ว",scheduled:"ยังไม่แข่งขัน",live:"กำลังแข่งขัน",approved:"รับรองแล้ว",pending_approval:"รอรับรอง",completed:"เสร็จสิ้น"};
 const fmt=x=>thaiStatus[x]||x;
@@ -29,35 +47,62 @@ $("mgrSignIn").onclick=()=>logIn(false);$("mgrSignUp").onclick=()=>logIn(true);
 $("mgrSignOut").onclick=async()=>{await db.auth.signOut();identity=null;current=null;await authSync();note("ออกจากระบบแล้ว")};
 async function reload(selectId){
  if(!identity)return;
- const {data,error}=await db.from("tournaments").select("id,name,status,best_of,created_at").order("created_at",{ascending:false}).limit(100);
+ const {data,error}=await db.from("tournaments").select("id,name,status,best_of,competition_format,created_at").order("created_at",{ascending:false}).limit(100);
  if(error){note("โหลดรายการไม่สำเร็จ","error",error.message);return}
  tournamentList=data||[];
  const list=$("mgrList");list.replaceChildren();
  if(!tournamentList.length)list.append(elem("p","ยังไม่มีรายการ กรอกชื่อและทีมทางซ้ายเพื่อเริ่มได้เลย"));
  for(const t of tournamentList){
   const card=elem("div","","item-card");const left=elem("div");
-  left.append(elem("strong",t.name),elem("small",fmt(t.status)+" · "+(t.best_of===3?"2 ใน 3 เซต":"3 ใน 5 เซต")));
+  left.append(elem("strong",t.name),elem("small",(formatName[t.competition_format]||"แบ่งสาย")+" · "+fmt(t.status)+" · "+(t.best_of===3?"2 ใน 3 เซต":"3 ใน 5 เซต")));
   const b=elem("button","เปิดจัดการ","btn");b.onclick=()=>open(t.id,true);card.append(left,b);list.append(card);
  }
  const choice=selectId||current?.id;
  if(choice&&tournamentList.some(t=>t.id===choice))await open(choice,false);
  status("พบ "+tournamentList.length+" รายการ");
 }
+function updateFormat(){
+ const type=$("mgrCompetitionFormat").value;
+ const single=type!=="group_round_robin";
+ $("mgrGroupCount").disabled=single;
+ if(single)$("mgrGroupCount").value="1";
+ else if($("mgrGroupCount").value==="1")$("mgrGroupCount").value="2";
+ const two=type==="group_round_robin"&&Number($("mgrGroupCount").value)===2;
+ $("mgrPlayoffsLabel").hidden=!two;
+ $("mgrFormatHelp").textContent=({
+ group_round_robin:"แบ่งทีมเป็นสาย A–D พบกันหมดภายในสาย สามารถมีรอบรองและรอบชิงต่อได้",
+ round_robin:"ทุกทีมพบทุกทีม เก็บคะแนนรวมทั้งรายการ ไม่มีการแบ่งหลายสาย",
+ knockout:"ทีมแพ้ตกรอบ โปรแกรมสร้างต่อเนื่องจนถึงคู่ชิง ต้องมี 2, 4, 8, 16, 32 หรือ 64 ทีม",
+ custom:"สร้างทีมไว้ก่อน แล้วเพิ่มรอบและคู่แข่งขันด้วยตนเองตามที่ต้องการ"
+ })[type];
+}
+$("mgrCompetitionFormat").onchange=updateFormat;
+$("mgrGroupCount").onchange=updateFormat;
+updateFormat();
+
 async function create(){
  if(!identity)return note("กรุณาเข้าสู่ระบบก่อน","error");
  if(waiting)return;
  const name=$("mgrTournamentName").value.trim();
  const teams=$("mgrTeams").value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
- const groups=Number($("mgrGroupCount").value),best=Number($("mgrBestOf").value);
+ const format=$("mgrCompetitionFormat").value;
+ const groups=format==="group_round_robin"?Number($("mgrGroupCount").value):1;
+ const best=Number($("mgrBestOf").value),playoffs=format==="group_round_robin"&&groups===2&&$("mgrPlayoffs").checked;
  if(!name||teams.length<2||teams.length>64||groups>teams.length)return note("ข้อมูลไม่ครบ","error","ตั้งชื่อรายการและกรอกทีม 2–64 ทีม");
  if(new Set(teams.map(s=>s.toLocaleLowerCase())).size!==teams.length)return note("พบชื่อทีมซ้ำ","error","กรุณาแก้ไขชื่อทีมก่อนบันทึก");
+ if(format==="knockout"&&![2,4,8,16,32,64].includes(teams.length))return note("จำนวนทีมไม่เหมาะกับแพ้คัดออก","error","เลือกรูปแบบกำหนดเอง หรือใช้ 2, 4, 8, 16, 32, 64 ทีม");
  waiting=true;$("mgrCreate").disabled=true;
  try{
-  const data=await api("create_tournament_draft",{p_name:name,p_slug:"vbc-"+crypto.randomUUID().replaceAll("-","").slice(0,24),p_best_of:best,p_group_count:groups,p_team_names:teams});
+  const data=await api("create_tournament_v2",{p_name:name,p_slug:"vbc-"+crypto.randomUUID().replaceAll("-","").slice(0,24),
+   p_best_of:best,p_groups:groups,p_team_names:teams,p_format:format,p_auto_playoffs:playoffs});
   await reload(data.tournament_id);
-  note("บันทึกรายการสำเร็จ","success",name+" · "+data.teams+" ทีม · "+data.matches+" คู่");
+  // Generation is independent from publication. If sequencing cannot safely run, keep the draft and notify the organizer.
+  if(["group_round_robin","round_robin"].includes(format)&&current?.id===data.tournament_id){
+   try{await autoOrder(false)}catch(e){note("สร้างรายการแล้ว แต่ยังจัดลำดับคู่ไม่ได้","warning",readableError(e))}
+  }
+  note("บันทึกรายการสำเร็จ","success",name+" · "+data.teams+" ทีม · "+data.matches+" คู่ · "+data.stages+" รอบ");
   $("mgrEditor").scrollIntoView({behavior:"smooth",block:"start"});
- }catch(e){note("บันทึกรายการไม่สำเร็จ","error",e.message)}
+ }catch(e){note("บันทึกรายการไม่สำเร็จ","error",readableError(e))}
  finally{waiting=false;$("mgrCreate").disabled=false}
 }
 $("mgrCreate").onclick=create;$("mgrReload").onclick=()=>reload().then(()=>note("โหลดรายการล่าสุดแล้ว"));
@@ -67,16 +112,17 @@ async function open(id,scroll){
   if(!item)throw Error("ไม่พบรายการที่เลือก");
   const requests=await Promise.all([
    db.from("tournament_teams").select("team_id").eq("tournament_id",id),
-   db.from("pools").select("id,code").eq("tournament_id",id).order("code"),
-   db.from("matches").select("id,team_a_id,team_b_id,status,scheduled_start,stage_id").eq("tournament_id",id).order("created_at"),
+   db.from("pools").select("id,code,stage_id").eq("tournament_id",id).order("code"),
+   db.from("matches").select("id,team_a_id,team_b_id,slot_a,slot_b,round_number,display_order,event_revision,status,scheduled_start,stage_id,created_at").eq("tournament_id",id).order("created_at"),
+   db.from("tournament_stages").select("id,title,stage_type,sort_order").eq("tournament_id",id).order("sort_order"),
   ]);
   const fail=requests.find(x=>x.error);if(fail)throw fail.error;
-  const [members,pools,matches]=requests.map(x=>x.data);
+  const [members,pools,matches,stages]=requests.map(x=>x.data);
   const ids=members.map(x=>x.team_id);
   let teams=[],assigned=[];
   if(ids.length){const r=await db.from("teams").select("id,name").in("id",ids);if(r.error)throw r.error;teams=r.data;}
   if(pools.length){const r=await db.from("pool_teams").select("pool_id,team_id").in("pool_id",pools.map(x=>x.id));if(r.error)throw r.error;assigned=r.data;}
-  current={...item,teams,pools,matches,assigned,id};
+  current={...item,teams,pools,matches,stages,assigned,id};editingMatchId=null;
   render();
   if(scroll)$("mgrEditor").scrollIntoView({behavior:"smooth",block:"start"});
  }catch(e){note("เปิดรายการไม่สำเร็จ","error",e.message)}
