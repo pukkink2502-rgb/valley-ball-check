@@ -92,3 +92,10 @@ test('approved poster picks matches through match RPC and loads when tournament 
  assert.ok(gfx.includes('official_match_snapshot'));
  assert.ok(gfx.includes('gfxTournament").onchange'));
 });
+
+test('scorer never labels left physical-side points with hardcoded team A',()=>{
+ for(const key of ['courtScoreView(cur,selectedSet,court)','courtScoreMessage(cur,scoredSet','const scoredSet=selectedSet',
+ 'selectedAlreadyScored','teamIndex=side=>'])assert.ok(official.includes(key),key);
+ assert.ok(!official.includes('cur.team_a+" "+$("offPoints0").textContent'),"stale toast paired canonical team A with left points");
+ assert.ok(!official.includes('sideTeamId(side)===cur?.team_a_id?0:1'),"missing side must not score team B");
+});
