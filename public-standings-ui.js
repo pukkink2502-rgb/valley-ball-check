@@ -10,6 +10,23 @@ nav.onclick=()=>{document.querySelectorAll(".page").forEach(s=>s.classList.toggl
 document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b===nav));
 $("location").textContent="โปรแกรมและอันดับ";window.scrollTo(0,0)};
 let current=null,list=[],owners=[];
+const poolHost=document.createElement("div");poolHost.id="pubPoolTables";
+$("pubStandings").closest(".tablewrap").after(poolHost);
+const rankingCols=["อันดับ","ทีม","แข่ง","ชนะ","คะแนน","เซตได้–เสีย","แต้มได้–เสีย"];
+function writeRankTable(target,records,names){
+ const title=elem("h3",target.code?"สาย "+target.code:"ตารางคะแนน");
+ const wrap=elem("div","","tablewrap"),table=elem("table"),head=elem("tr");
+ for(const col of rankingCols)head.append(elem("th",col));
+ const body=elem("tbody");
+ for(const row of records){
+  const r=elem("tr");const cells=[row.rank+(row.pendingTie?" · รอตัดสิน":""),names.get(row.id)||"?",
+   row.played,row.wins,row.matchPoints,row.setsFor+"–"+row.setsAgainst,row.pointsFor+"–"+row.pointsAgainst];
+  for(const v of cells)r.append(elem("td",v));body.append(r);
+ }
+ if(!records.length){const tr=elem("tr"),td=elem("td","ยังไม่มีทีม");td.colSpan=7;tr.append(td);body.append(tr)}
+ table.append(head,body);wrap.append(table);poolHost.append(title,wrap);
+}
+
 const pop=(x,type="success",detail="")=>window.VBC?.notify(x,type,detail);
 const say=(msg,err=false)=>box("pubStatus",msg,err),admin=(msg,err=false)=>box("pubOwnerStatus",msg,err);
 const dstr=d=>d?new Date(d).toLocaleString("th-TH",{dateStyle:"short",timeStyle:"short"}):"ยังไม่กำหนด";
@@ -48,8 +65,23 @@ async function show(slug){
   const names=new Map(current.teams.map(x=>[x.id,x.name]));
   const poolMatches=current.matches.filter(m=>["pool","round_robin"].includes(m.stage_type));
   const matches=poolMatches.map(m=>({teamA:m.team_a_id,teamB:m.team_b_id,bestOf:m.best_of,sets:m.sets,approved:m.status==="approved"}));
-  const standings=poolMatches.length?buildStandings(current.teams.map(x=>x.id),matches):[];
-  tableRows("pubStandings",standings.map(s=>[s.rank+(s.pendingTie?" · รอตัดสิน":""),names.get(s.id),s.played,s.wins,s.matchPoints,s.setsFor+"–"+s.setsAgainst,s.pointsFor+"–"+s.pointsAgainst]));
+  const multiPool=current.competition_format==="group_round_robin"&&current.pools?.length>1;
+  poolHost.replaceChildren();
+  $("pubStandings").closest(".tablewrap").hidden=multiPool;
+  if(multiPool){
+   for(const group of current.pools){
+    const teamIds=group.team_ids||[],members=new Set(teamIds);
+    const groupMatches=current.matches.filter(m=>m.stage_type==="pool"&&members.has(m.team_a_id)&&members.has(m.team_b_id));
+    const stageScores=groupMatches.map(m=>({teamA:m.team_a_id,teamB:m.team_b_id,bestOf:m.best_of,sets:m.sets,approved:m.status==="approved"}));
+    const ranked=buildStandings(teamIds,stageScores);
+    writeRankTable(group,ranked,names);
+   }
+   $("pubTitle").textContent="ตารางคะแนนแยกตามสาย · "+current.name;
+  } else {
+   const standings=poolMatches.length?buildStandings(current.teams.map(x=>x.id),matches):[];
+   tableRows("pubStandings",standings.map(s=>[s.rank+(s.pendingTie?" · รอตัดสิน":""),names.get(s.id),s.played,s.wins,s.matchPoints,s.setsFor+"–"+s.setsAgainst,s.pointsFor+"–"+s.pointsAgainst]));
+   $("pubTitle").textContent=(poolMatches.length?"ตารางคะแนนรอบพบกันหมด":"รูปแบบนี้ไม่มีตารางคะแนนสะสม")+" · "+current.name;
+  }
   const player=m=>names.get(m)||null;
   const first=m=>player(m.team_a_id)||m.slot_a||"รอระบุทีม";
   const second=m=>player(m.team_b_id)||m.slot_b||"รอระบุทีม";
@@ -60,7 +92,6 @@ async function show(slug){
   $("pubNextMatch").textContent=next?"คู่ถัดไป: "+first(next)+" พบ "+second(next)+" · "+next.stage_title+
    (next.scheduled_start?" · "+dstr(next.scheduled_start):" · ยังไม่กำหนดเวลา"):
    "ยังไม่มีคู่ที่รอแข่งขัน";
-  $("pubTitle").textContent=(poolMatches.length?"ตารางคะแนนรอบพบกันหมด":"รูปแบบนี้ไม่มีตารางคะแนนสะสม")+" · "+current.name;
   say("แสดง "+current.teams.length+" ทีม · "+current.matches.length+" คู่แล้ว");
  }catch(e){current=null;say("ไม่สามารถเปิดรายการได้: "+e.message,true);pop("โหลดตารางคะแนนไม่สำเร็จ","error",e.message)}
 }
