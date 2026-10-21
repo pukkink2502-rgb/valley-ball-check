@@ -1,126 +1,221 @@
-// Printable Thai score report. Canvas pages preserve Thai glyphs in PDF without embedding font files.
-const PAGE_W=1240,PAGE_H=1754;
-const COLORS={ink:"#1c2636",muted:"#586579",border:"#d4dbe5",accent:"#143d69",green:"#126052"};
-const clean=x=>String(x??"");
-const statusName={scheduled:"ยังไม่เริ่มแข่งขัน",live:"กำลังแข่งขัน",pending_approval:"รอปิดผล",approved:"ปิดผลแล้ว",void:"ยกเลิก"};
-const evtName={timeout:"เวลานอก",substitution:"เปลี่ยนตัว",libero:"Libero",rotation:"หมุนตำแหน่ง",sanction:"ลงโทษ",correction:"แก้ไข",start_set:"เริ่มเซต",end_set:"จบเซต",result_finalized:"ปิดผลการแข่งขัน"};
-const date=stamp=>stamp?new Date(stamp).toLocaleString("th-TH",{dateStyle:"medium",timeStyle:"short"}):"—";
-function sheet(snapshot,{name="",signature=null}={}){
- const images=[],font="'Prompt','Anuphan',Tahoma,sans-serif";
- const teams=[snapshot.team_a||snapshot.slot_a||"ทีม A",snapshot.team_b||snapshot.slot_b||"ทีม B"];
- const score=snapshot.sets_won||[0,0];
- const winner=snapshot.status==="approved"||snapshot.status==="pending_approval"?
-  (score[0]===score[1]?"รอตรวจผล":score[0]>score[1]?teams[0]:teams[1]):"ยังไม่สรุปผู้ชนะ";
- const roster=new Map((snapshot.roster||[]).map(x=>[x.id,clean(x.number)]));
- function page(){
-  const canvas=document.createElement("canvas");canvas.width=PAGE_W;canvas.height=PAGE_H;
-  const c=canvas.getContext("2d");c.fillStyle="#fff";c.fillRect(0,0,PAGE_W,PAGE_H);
-  c.strokeStyle=COLORS.border;c.lineWidth=2;c.strokeRect(42,42,PAGE_W-84,PAGE_H-84);
-  c.fillStyle=COLORS.accent;c.fillRect(44,44,PAGE_W-88,18);
-  return {canvas,c};
- }
- function txt(c,value,x,y,size=28,bold=false,color=COLORS.ink,max=1100,align="left"){
-  c.fillStyle=color;c.font=(bold?700:400)+" "+size+"px "+font;c.textAlign=align;
-  c.fillText(clean(value),x,y,max);c.textAlign="left";
- }
- function line(c,x,y,w){c.strokeStyle=COLORS.border;c.lineWidth=2;c.beginPath();c.moveTo(x,y);c.lineTo(x+w,y);c.stroke();}
- function finish(p,n){txt(p.c,"สกอร์ชีตสรุปผล · "+(snapshot.tournament||"การแข่งขัน"),70,1688,20,false,COLORS.muted);
- txt(p.c,"หน้า "+n,1160,1688,20,false,COLORS.muted,100,"right");
- images.push(p.canvas.toDataURL("image/jpeg",.91));}
- const p=page(),c=p.c;
- txt(c,"รายงานผลการแข่งขันวอลเลย์บอล",76,123,48,true,COLORS.accent);
- txt(c,snapshot.tournament||"รายการแข่งขัน",76,176,30,true);
- txt(c,"สถานะ: "+(statusName[snapshot.status]||snapshot.status)+"   |   หมายเลขแมตช์ "+clean(snapshot.id).slice(0,8).toUpperCase(),76,222,21,false,COLORS.muted);
- line(c,76,256,1085);
- txt(c,teams[0],85,334,35,true,COLORS.ink,430);
- txt(c,score[0]+" : "+score[1],620,354,60,true,COLORS.accent,250,"center");
- txt(c,teams[1],1150,334,35,true,COLORS.ink,430,"right");
- txt(c,"ผลการแข่งขัน: "+winner,85,415,30,true,COLORS.green);
- txt(c,"ข้อมูลดึงจากผลการแข่งขันที่บันทึกไว้ ณ "+date(new Date()),85,453,20,false,COLORS.muted);
- txt(c,"คะแนนรายเซต",85,516,32,true,COLORS.accent);
- c.fillStyle="#eaf1f9";c.fillRect(76,536,1085,53);
- txt(c,"เซต",107,573,24,true);txt(c,teams[0],340,573,23,true);txt(c,teams[1],810,573,23,true);
- const setRows=(snapshot.sets||[]).slice(0,5);
- for(let i=0;i<Math.max(3,setRows.length);i++){
-  const s=setRows[i]||{},y=626+i*62;
-  txt(c,String(s.set??i+1),113,y,26,true);
-  txt(c,s.a??"—",365,y,28,true);
-  txt(c,s.b??"—",832,y,28,true);
-  if(i%2===1){c.strokeStyle="#e5ebf2";line(c,76,y+17,1080);}
- }
- const offset=840;
- txt(c,"ผู้เล่นเริ่มต้นแต่ละเซต (ตำแหน่ง 1–6)",85,offset,30,true,COLORS.accent);
- const lineups=snapshot.lineups||[];
- let active=offset+57;
- for(const s of Array.from({length:snapshot.best_of||3},(_,i)=>i+1)){
-  const rows=lineups.filter(l=>l.set===s);
-  if(!rows.length)continue;
-  txt(c,"เซต "+s,98,active,22,true);
-  for(let side=0;side<2;side++){
-   const team=side===0?snapshot.team_a_id:snapshot.team_b_id;
-   const values=(rows.find(l=>l.team_id===team)?.initial||[]).map(id=>roster.get(id)||"?").join(" · ");
-   txt(c,(side===0?"ซ้าย: ":"ขวา: ")+(values||"—"),270,active+side*29,20,false,COLORS.ink,840);
-  }
-  active+=75;
-  if(active>1325)break;
- }
- const events=(snapshot.events||[]).filter(e=>e.event!=="point");
- txt(c,"ประวัติสำคัญ: "+events.length+" รายการ (รายละเอียดหน้าถัดไป)",85,1390,22,false,COLORS.muted);
- line(c,85,1420,1040);
- txt(c,"ผู้บันทึก / เจ้าหน้าที่: "+(name||snapshot.official_name||"........................................................"),85,1462,23,true);
- if(signature){try{c.drawImage(signature,670,1444,380,110)}catch{/* blank signing line remains */}}
- line(c,670,1580,420);
- txt(c,"ลายมือชื่อเจ้าหน้าที่ (เซ็นบนกระดาษหรือบนหน้าจอ)",670,1610,18,false,COLORS.muted);
- finish(p,1);
- const pageSize=29;
- for(let i=0;i<events.length;i+=pageSize){
-  const sheetPage=page(),ctx=sheetPage.c;
-  txt(ctx,"บันทึกเหตุการณ์การแข่งขัน",75,124,41,true,COLORS.accent);
-  txt(ctx,teams[0]+" พบ "+teams[1],75,177,27,true);
-  txt(ctx,"รายการ: "+(snapshot.tournament||"—"),75,221,22);
-  line(ctx,75,251,1080);
-  txt(ctx,"# / เซต",90,295,23,true);txt(ctx,"ประเภท",250,295,23,true);txt(ctx,"รายละเอียด",505,295,23,true);
-  const group=events.slice(i,i+pageSize);
-  for(let j=0;j<group.length;j++){
-   const event=group[j],y=339+j*44;
-   if(j%2===0){ctx.fillStyle="#f4f7fb";ctx.fillRect(76,y-27,1080,39);}
-   txt(ctx,clean(event.seq)+"/"+clean(event.set),90,y,19);
-   txt(ctx,evtName[event.event]||event.event,250,y,20);
-   const p=event.payload||{};
-   const description=[p.out_number&&"ออก #"+p.out_number,p.in_number&&"เข้า #"+p.in_number,
-   p.libero_number&&"Libero #"+p.libero_number,p.reason,p.official_name].filter(Boolean).join(" · ")||date(event.at);
-   txt(ctx,description,505,y,20,false,COLORS.ink,635);
-  }
-  finish(sheetPage,images.length+1);
- }
- return images;
+import {courtForSet} from "./court-side-rules.mjs";
+/**
+ * A4 LANDSCAPE volleyball scoresheet — printable, one summary and one/more set pages.
+ * Inspired by FIVB service-order/point recording, NOT the official FIVB-issued form.
+ * Uses recorded event history and shows gaps rather than pretending it is complete.
+ */
+const W=1754,H=1240;
+const C={navy:"#163350",blue:"#19577c",ink:"#162735",muted:"#506679",line:"#bac9d5",pale:"#edf3f8",teal:"#daf2e8",white:"#fff",gold:"#e3ac46",red:"#9e3040"};
+const font="'Anuphan','Prompt',Tahoma,sans-serif";
+const str=x=>String(x??"");
+const integer=x=>Number.isFinite(Number(x))?Math.max(0,Number(x)):0;
+function canvasPage(){
+ const canvas=document.createElement("canvas");canvas.width=W;canvas.height=H;
+ const c=canvas.getContext("2d");c.fillStyle=C.white;c.fillRect(0,0,W,H);
+ c.fillStyle=C.navy;c.fillRect(0,0,W,16);return {c,canvas};
 }
-export async function makeScoresheetDocument(snapshot,options={}){
+function txt(c,s,x,y,n=23,bold=false,color=C.ink,max=1600,align="left"){
+ c.font=(bold?700:400)+" "+n+"px "+font;c.fillStyle=color;c.textAlign=align;
+ c.fillText(str(s),x,y,max);c.textAlign="left";
+}
+function rect(c,x,y,w,h,color=C.white){c.fillStyle=color;c.fillRect(x,y,w,h);c.strokeStyle=C.line;c.lineWidth=1.5;c.strokeRect(x,y,w,h)}
+function line(c,x,y,w){c.strokeStyle=C.line;c.beginPath();c.moveTo(x,y);c.lineTo(x+w,y);c.stroke()}
+function pageTitle(c,s,name,sub){
+ txt(c,name,57,67,39,true,C.navy);
+ txt(c,s.tournament||"รายการแข่งขัน",57,106,25,true,C.muted,1240);
+ txt(c,(s.team_a||s.slot_a||"ทีม A")+" พบ "+(s.team_b||s.slot_b||"ทีม B"),57,146,27,true);
+ txt(c,sub,1695,112,20,false,C.muted,490,"right");line(c,57,169,1640);
+}
+function footer(c,index,title){
+ line(c,58,1184,1638);
+ txt(c,"สกอร์ชีตวอลเลย์บอล · จัดทำจากบันทึกการแข่งขันจริง · รูปแบบแนวนอน",59,1211,18,false,C.muted);
+ txt(c,title+" · หน้า "+index,1695,1211,18,false,C.muted,430,"right");
+}
+const names=s=>[s.team_a||s.slot_a||"ทีม A",s.team_b||s.slot_b||"ทีม B"];
+function pointsByTeam(s,number){
+ const events=[...(s.events||[])].filter(e=>e.event==="point"&&Number(e.set)===Number(number))
+ .sort((a,b)=>integer(a.seq)-integer(b.seq));
+ const counts=[0,0],list=[[],[]];
+ for(const e of events){
+  const i=Number(e.payload?.team);if(i!==0&&i!==1)continue;
+  counts[i]++;list[i].push({point:counts[i],seq:e.seq,time:e.at});
+ }
+ return list;
+}
+function lineup(s,set,teamId){
+ const roster=new Map((s.roster||[]).map(x=>[str(x.id),str(x.number)]));
+ const l=(s.lineups||[]).find(x=>x.set===set&&x.team_id===teamId);
+ return Array.from({length:6},(_,i)=>roster.get(str(l?.initial?.[i]))||"—");
+}
+function drawSummary(s,sign,index){
+ const {canvas,c}=canvasPage();pageTitle(c,s,"รายงานสกอร์ชีตวอลเลย์บอล · สรุปการแข่งขัน","A4 แนวนอน");
+ const [a,b]=names(s),wins=s.sets_won||[0,0];
+ rect(c,57,194,1640,158,C.pale);
+ txt(c,a,110,251,43,true,C.ink,650);txt(c,b,1640,251,43,true,C.ink,650,"right");
+ txt(c,wins[0]+" : "+wins[1],878,286,74,true,C.navy,300,"center");
+ const closed=["approved","pending_approval"].includes(s.status);
+ const winner=closed?(wins[0]===wins[1]?"รอผล":wins[0]>wins[1]?a:b):"ยังไม่สิ้นสุด";
+ txt(c,"ทีมชนะ: "+winner,878,329,30,true,C.blue,1360,"center");
+ txt(c,"สถานะ: "+({approved:"ปิดผลแล้ว",pending_approval:"แข่งขันจบแล้ว รอปิดผล",live:"กำลังแข่งขัน",scheduled:"ยังไม่แข่งขัน"}[s.status]||s.status),59,402,25,true);
+ txt(c,"วันที่ออกเอกสาร: "+new Date().toLocaleString("th-TH"),1692,402,21,false,C.muted,800,"right");
+ txt(c,"คะแนนรายเซต",59,465,30,true,C.navy);
+ const edges=[57,210,650,1060,1375,1697],header=490;
+ rect(c,57,header,1640,60,C.pale);
+ ["เซต","ทีม A: "+a,"ทีม B: "+b,"ชนะเซต","สถานะ"].forEach((v,i)=>txt(c,v,edges[i]+15,header+38,23,true,C.navy,edges[i+1]-edges[i]-27));
+ const sets=s.sets||[];
+ for(let i=0;i<Math.max(3,sets.length);i++){
+  const row=sets[i]||{},y=550+i*66;
+  rect(c,57,y,1640,66,i%2?C.pale:C.white);
+  txt(c,row.set||i+1,72,y+43,27,true);
+  txt(c,row.a??"—",227,y+43,28,true);
+  txt(c,row.b??"—",671,y+43,28,true);
+  txt(c,row.status==="complete"?(Number(row.a)>Number(row.b)?a:b):"—",1078,y+43,22,true,C.blue,284);
+  txt(c,row.status==="complete"?"จบเซต":"รอดำเนินการ",1392,y+43,21);
+ }
+ const start=550+Math.max(3,sets.length)*66+55;
+ txt(c,"ผู้บันทึก / เจ้าหน้าที่: "+(s._officer||s.official_name||"............................................."),61,start,27,true);
+ txt(c,"ลงลายมือชื่อผู้บันทึก",1040,start+42,23,true);
+ if(sign)try{c.drawImage(sign,1020,start+47,510,125)}catch{}
+ line(c,1018,start+184,565);
+ txt(c,"สามารถเซ็นสดหลังพิมพ์หรือเซ็นบนหน้าจอก่อนส่งออก",1018,start+211,18,false,C.muted,580);
+ txt(c,"หมายเหตุ: บันทึกผลจากระบบไม่ใช่เอกสารรับรองการแข่งขันโดย FIVB",60,1121,19,false,C.muted);
+ footer(c,index,"สรุป");return canvas.toDataURL("image/jpeg",.91);
+}
+function drawPoints(c,x,y,team,realPoints,final,first,last){
+ rect(c,x,y,788,453);
+ c.fillStyle=C.navy;c.fillRect(x,y,788,51);
+ txt(c,team,x+15,y+34,28,true,C.white,760);
+ txt(c,"แต้มตั้งแต่ "+first+" ถึง "+last+"  •  ผลจบเซต "+final+" แต้ม",x+15,y+82,19,false,C.muted);
+ const logged=new Set(realPoints.map(p=>p.point));
+ for(let j=0;j<=59&&first+j<=last;j++){
+  const n=first+j,row=Math.floor(j/10),col=j%10;
+  const px=x+13+col*76,py=y+100+row*56,scored=n<=final,verified=logged.has(n);
+  rect(c,px,py,74,54,scored?(verified?C.teal:"#fff2dc"):C.white);
+  txt(c,n,px+9,py+27,21,scored,C.ink);
+  if(scored){
+   c.strokeStyle=verified?C.blue:C.gold;c.lineWidth=2.7;c.beginPath();
+   c.moveTo(px+6,py+43);c.lineTo(px+65,py+8);c.stroke();
+  }
+ }
+ txt(c,"ขีดน้ำเงิน = พบเหตุการณ์คะแนน  |  ขีดทอง = คะแนนสรุปที่ไม่มีเหตุการณ์",x+15,y+446,16,false,C.muted,760);
+}
+function serviceSequence(s,set){
+ const first=(s.services||[]).find(x=>Number(x.set)===Number(set))?.first_team_id;
+ const id=[s.team_a_id,s.team_b_id],k=team=>id.indexOf(team);
+ const serverIndex=k(first);
+ if(serverIndex<0)return {ok:false,turns:[],note:"ไม่มีข้อมูลทีมเริ่มเสิร์ฟของเซตนี้"};
+ const seq=[...(s.events||[])].filter(e=>Number(e.set)===Number(set))
+ .sort((a,b)=>integer(a.seq)-integer(b.seq));
+ const rotations=[0,0],score=[0,0],turns=[];
+ let server=serverIndex;
+ const add=()=>turns.push({side:server,pos:(rotations[server]%6)+1,score:[...score],seq:null});
+ add();
+ for(const event of seq){
+  if(event.event==="rotation"){
+   const side=k(event.payload?.team_id);
+   if(side<0)continue;
+   rotations[side]++;
+   if(server!==side){server=side;add()}
+  }else if(event.event==="point"){
+   const side=Number(event.payload?.team);
+   if(side!==0&&side!==1)continue;
+   if(server!==side){server=side;rotations[side]++;add()}
+   score[side]++;turns.at(-1).score=[...score];turns.at(-1).seq=event.seq;
+  }
+ }
+ const end=(s.sets||[]).find(x=>Number(x.set)===Number(set));
+ const verified=!end||(score[0]===Number(end.a)&&score[1]===Number(end.b));
+ return {ok:verified,turns,note:verified?"เรียงตามเหตุการณ์หมุนตำแหน่งและแต้ม":"คะแนนในเหตุการณ์ไม่ตรงผลรวม • โปรดตรวจบันทึกเดิม"};
+}
+function drawService(c,s,set,top){
+ const result=serviceSequence(s,set),roster=[lineup(s,set,s.team_a_id),lineup(s,set,s.team_b_id)];
+ txt(c,"ลำดับผู้เล่นเสิร์ฟ I–VI และรอบเสิร์ฟ",57,top,27,true,C.navy);
+ for(let side=0;side<2;side++){
+  const x=side?910:57,base=top+19;
+  rect(c,x,base,787,45,side?C.pale:C.teal);
+  txt(c,"ทีม "+(side?"B":"A"),x+10,base+30,23,true,C.navy);
+  for(let pos=1;pos<=6;pos++)txt(c,["I","II","III","IV","V","VI"][pos-1],x+255+(pos-1)*83,base+30,20,true);
+  const matches=result.turns.filter(t=>t.side===side);
+  for(let round=0;round<3;round++){
+   const y=base+45+round*57;rect(c,x,y,787,57,round%2?C.pale:C.white);
+   txt(c,"รอบ "+(round+1),x+9,y+36,19,true);
+   for(let pos=1;pos<=6;pos++){
+    const colX=x+239+(pos-1)*83,t=matches.filter(t=>t.pos===pos)[round];
+    c.strokeStyle=C.line;c.strokeRect(colX,y,83,57);
+    if(t){
+     txt(c,"#"+roster[side][pos-1],colX+7,y+24,17,true,C.blue,76);
+     txt(c,t.score[side],colX+7,y+46,19,true);
+    }else txt(c,"—",colX+31,y+34,16,false,C.muted);
+   }
+  }
+  if(matches.length>18)txt(c,"รอบเพิ่มเติม: "+(matches.length-18),x+12,base+237,16,false,C.red);
+ }
+ if(!result.ok)txt(c,"ตรวจสอบข้อมูลเสิร์ฟ: "+result.note,63,top+279,18,true,C.red,1570);
+ return result;
+}
+function drawSetPage(s,data,set,page,first,last,pages){
+ const {canvas,c}=canvasPage(),namesList=names(s);
+ pageTitle(c,s,"บันทึกคะแนน · เซต "+set.set,"หน้า "+(page+1)+"/"+pages+" • ผล "+set.a+"–"+set.b);
+ const court=courtForSet(s,set.set),start=(s.court_sides||[]).find(x=>Number(x.set)===(Number(set.set)===Number(s.best_of)?set.set:1));
+ const initial=Number(set.set)===Number(s.best_of)?start?.left_team_id:Number(set.set)%2===1?start?.left_team_id:
+  start?.left_team_id===s.team_a_id?s.team_b_id:s.team_a_id;
+ const firstTeam=(s.services||[]).find(x=>Number(x.set)===Number(set.set))?.first_team_id;
+ txt(c,"ฝั่งต้นเซต: "+(initial===s.team_a_id?"A":initial===s.team_b_id?"B":"ไม่บันทึก")+
+ " อยู่ซ้าย    |    เริ่มเสิร์ฟ: "+(firstTeam===s.team_a_id?"A":firstTeam===s.team_b_id?"B":"ไม่บันทึก")+
+ (court?.decidingSwitched?"    |    เปลี่ยนฝั่งในเซตตัดสินเมื่อมีทีมถึง 8 แต้ม":""),60,196,21,true,C.blue);
+ rect(c,57,208,1640,92,C.pale);
+ const la=lineup(s,set.set,s.team_a_id),lb=lineup(s,set.set,s.team_b_id);
+ txt(c,"ตัวจริง: ลำดับเสิร์ฟ I → VI",75,239,22,true,C.navy);
+ txt(c,"A: "+la.map((n,i)=>["I","II","III","IV","V","VI"][i]+" #"+n).join("   "),75,268,22,false,C.ink,1550);
+ txt(c,"B: "+lb.map((n,i)=>["I","II","III","IV","V","VI"][i]+" #"+n).join("   "),75,293,22,false,C.ink,1550);
+ drawPoints(c,57,318,namesList[0],data[0],integer(set.a),first,last);
+ drawPoints(c,910,318,namesList[1],data[1],integer(set.b),first,last);
+ const service=drawService(c,s,set.set,808);
+ const all=(s.events||[]).filter(e=>Number(e.set)===Number(set.set));
+ const other=all.filter(e=>["timeout","substitution","libero","sanction","correction"].includes(e.event));
+ txt(c,"บันทึกอื่น: "+other.length+" รายการ (เวลานอก / เปลี่ยนตัว / Libero / ลงโทษ)",62,1124,20,false,C.muted);
+ txt(c,"ผู้บันทึก: "+(s._officer||s.official_name||"........................................"),62,1152,20,true);
+ line(c,1065,1151,582);txt(c,"ลายมือชื่อเจ้าหน้าที่",1150,1171,16,false,C.muted);
+ footer(c,s._page,"เซต "+set.set);
+ return {jpeg:canvas.toDataURL("image/jpeg",.92),turns:service.turns};
+}
+async function createPages(snapshot,options={}){
  if(!snapshot?.id)throw Error("กรุณาเลือกคู่แข่งขันก่อน");
  if(document.fonts){
-  await Promise.allSettled([document.fonts.load("700 48px Prompt","รายงานการแข่งขัน"),
-   document.fonts.load("500 25px Anuphan","คะแนนรวม")]);await document.fonts.ready;
+  await Promise.allSettled([document.fonts.load("700 41px Anuphan","ผลการแข่งขัน"),
+    document.fonts.load("500 25px Prompt","คะแนน")]);await document.fonts.ready;
  }
- if(options.signature){const image=new Image();image.src=options.signature;
-  try{await image.decode();options={...options,signature:image}}
-  catch{options={...options,signature:null}}
+ let signature=null;
+ if(options.signature){
+  try{signature=new Image();signature.src=options.signature;await signature.decode()}catch{signature=null}
  }
- const pages=sheet(snapshot,options);
+ const s={...snapshot,_officer:options.name||snapshot.official_name||""};
+ const pages=[drawSummary(s,signature,1)];
+ for(const set of s.sets||[]){
+  const required=Math.max(Number(set.set)===Number(s.best_of)?15:25,integer(set.a),integer(set.b));
+  const chunks=Math.max(1,Math.ceil(required/60)),points=pointsByTeam(s,set.set);
+  for(let i=0;i<chunks;i++){
+   s._page=pages.length+1;
+   pages.push(drawSetPage(s,points,set,i,i*60+1,Math.min(required,(i+1)*60),chunks).jpeg);
+  }
+ }
+ return pages;
+}
+export async function createScoresheetPreviewImages(snapshot,options={}){return createPages(snapshot,options)}
+export async function makeScoresheetDocument(snapshot,options={}){
+ const pages=await createPages(snapshot,options);
  const {jsPDF}=await import("https://esm.sh/jspdf@2.5.2");
- const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait",compress:true});
- for(let n=0;n<pages.length;n++){if(n)doc.addPage();doc.addImage(pages[n],"JPEG",0,0,210,297)}
+ const doc=new jsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
+ pages.forEach((img,index)=>{if(index)doc.addPage();doc.addImage(img,"JPEG",0,0,297,210)});
  return doc;
 }
-export async function downloadScoresheet(snapshot,options){
- const doc=await makeScoresheetDocument(snapshot,options);
- doc.save("สกอร์ชีต-"+clean(snapshot.team_a||"A")+"-"+clean(snapshot.team_b||"B")+".pdf");
-}
+const filename=(s)=>"สกอร์ชีต-"+str(s.team_a||"ทีม-A").replace(/[\\/:*?"<>|]/g,"-")+"-"+str(s.team_b||"ทีม-B").replace(/[\\/:*?"<>|]/g,"-")+".pdf";
+export async function downloadScoresheet(snapshot,options){(await makeScoresheetDocument(snapshot,options)).save(filename(snapshot))}
 export async function printScoresheet(snapshot,options){
- // Open the tab synchronously to avoid losing the user gesture after awaits.
  const tab=window.open("","_blank");
- try{const doc=await makeScoresheetDocument(snapshot,options);
-  const url=URL.createObjectURL(doc.output("blob"));
+ try{
+  const doc=await makeScoresheetDocument(snapshot,options),url=URL.createObjectURL(doc.output("blob"));
   if(tab){tab.location.href=url;tab.focus();setTimeout(()=>URL.revokeObjectURL(url),120000)}
-  else{doc.save("สกอร์ชีต.pdf");URL.revokeObjectURL(url)}
+  else{doc.save(filename(snapshot));URL.revokeObjectURL(url)}
  }catch(e){tab?.close();throw e}
 }
