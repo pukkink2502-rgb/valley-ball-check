@@ -80,7 +80,7 @@ function render(){
    input.dataset.courtSide=side;input.dataset.courtPos=String(pos);
    input.setAttribute("aria-label",(side==="a"?cur.team_a:cur.team_b)+" ตำแหน่ง "+pos+" เซต "+selectedSet);
    input.placeholder="—";input.value=roster.get(lineup?.positions?.[pos-1])||"";
-   input.disabled=!canEditSet();
+   input.readOnly=!canEditSet();input.classList.toggle('court-readonly',input.readOnly);
    input.oninput=()=>{input.value=input.value.replace(/\D/g,"");dirty=true};
    input.onclick=()=>{if(input.value){$("offTeamChoice").value=side==="a"?"0":"1";$("offOut").value=input.value}};
    block.append(n,input);parent.append(block);
