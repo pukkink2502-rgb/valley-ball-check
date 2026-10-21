@@ -1,38 +1,58 @@
 import {db,$,elem,box,api,signedIn,opt,owned,downloadBlob} from "./suite-core.js";
-$("graphics").innerHTML="<div class=\"eyebrow\">ออกแบบภาพการแข่งขัน</div><h1>สร้างกราฟิกการแข่งขัน</h1>\n<p>สร้างโปสเตอร์โปรแกรมการแข่งขันหรือผลการแข่งขัน รองรับแนวตั้ง 9:16 และสี่เหลี่ยม 1:1 ปรับสีและข้อความ แล้วส่งออก PNG/PDF</p>\n<div class=\"two\">\n<div class=\"card\"><h3>ตั้งค่าโปสเตอร์</h3>\n<label>รายการแข่งขัน<select id=\"gfxTournament\"></select></label><button class=\"btn\" id=\"gfxReload\">↻ โหลดรายการ</button>\n<label>ประเภทงาน<select id=\"gfxType\"><option value=\"fixtures\">โปรแกรมการแข่งขัน</option><option value=\"results\">ผลการแข่งขัน</option><option value=\"teams\">รายชื่อทีม</option></select></label>\n<label>ชื่อหัวเรื่อง<input id=\"gfxTitle\" value=\"โปรแกรมการแข่งขันวอลเลย์บอล\"></label>\n<label>หัวเรื่องรอง<input id=\"gfxSubtitle\" value=\"ข้อมูลจากรายการแข่งขัน\"></label>\n<div class=\"formrow\"><label>ขนาด<select id=\"gfxSize\"><option value=\"portrait\">9:16 • 1080 × 1920</option><option value=\"square\">1:1 • 1080 × 1080</option></select></label>\n<label>ธีม<select id=\"gfxTheme\"><option value=\"red\">แดง–ทอง</option><option value=\"blue\">กรมท่า–ทอง</option><option value=\"black\">ดำ–ทอง</option></select></label></div>\n<label>จำนวนคู่ที่แสดง<input id=\"gfxLimit\" type=\"number\" min=\"2\" max=\"30\" value=\"16\"></label>\n<label>เพิ่มโลโก้ (รูปจากเครื่อง)<input type=\"file\" id=\"gfxLogo\" accept=\"image/png,image/jpeg,image/webp\"></label>\n<div class=\"actions\"><button class=\"btn primary\" id=\"gfxBuild\">สร้างภาพจากรายการ</button><button class=\"btn\" id=\"gfxSave\">บันทึกแบบ</button><button class=\"btn\" id=\"gfxHistory\">ดูแบบที่บันทึก</button></div>\n<div class=\"actions\"><button class=\"btn\" id=\"gfxPNG\">ดาวน์โหลด PNG</button><button class=\"btn\" id=\"gfxPDF\">ดาวน์โหลด PDF</button></div>\n<p role=\"status\" id=\"gfxStatus\"></p><div id=\"gfxSaved\"></div></div>\n<div class=\"card\"><h3>ตัวอย่างโปสเตอร์</h3><p>พาดหัวและข้อมูลการแข่งขันอ้างอิงจากรายการที่เลือก</p>\n<canvas id=\"gfxCanvas\" width=\"1080\" height=\"1920\" style=\"width:100%;height:auto;border-radius:12px;background:#6d0f18;touch-action:none\" aria-label=\"โปสเตอร์ที่สร้าง\"></canvas>\n<p class=\"small\">ไฟล์ส่งออกสร้างจากภาพแคนวาส รองรับอักษรไทยตามฟอนต์ที่อุปกรณ์มี</p></div></div>";
+$("graphics").innerHTML="<div class=\"eyebrow\">ออกแบบภาพการแข่งขัน</div><h1>สร้างกราฟิกการแข่งขัน</h1>\n<p>สร้างโปสเตอร์โปรแกรมการแข่งขันหรือผลการแข่งขัน รองรับแนวตั้ง 9:16 และสี่เหลี่ยม 1:1 ปรับสีและข้อความ แล้วส่งออก PNG/PDF</p>\n<div class=\"two\">\n<div class=\"card\"><h3>ตั้งค่าโปสเตอร์</h3>\n<label>รายการแข่งขัน<select id=\"gfxTournament\"></select></label><button class=\"btn\" id=\"gfxReload\">↻ โหลดรายการ</button>\n<label>ประเภทงาน<select id=\"gfxType\"><option value=\"fixtures\">โปรแกรมการแข่งขัน</option><option value=\"results\">ผลการแข่งขัน</option><option value=\"teams\">รายชื่อทีม</option></select></label>\n<label>ฟอนต์หัวเรื่อง<select id=\"gfxFont\"><option value=\"Anuphan\">Anuphan</option><option value=\"Kanit\">Kanit</option><option value=\"Prompt\">Prompt</option></select></label>\n<label>ชื่อหัวเรื่อง<input id=\"gfxTitle\" value=\"โปรแกรมการแข่งขันวอลเลย์บอล\"></label>\n<label>หัวเรื่องรอง<input id=\"gfxSubtitle\" value=\"ข้อมูลจากรายการแข่งขัน\"></label>\n<div class=\"formrow\"><label>ขนาด<select id=\"gfxSize\"><option value=\"portrait\">9:16 • 1080 × 1920</option><option value=\"square\">1:1 • 1080 × 1080</option></select></label>\n<label>ธีม<select id=\"gfxTheme\"><option value=\"red\">แดง–ทอง</option><option value=\"blue\">กรมท่า–ทอง</option><option value=\"black\">ดำ–ทอง</option></select></label></div>\n<label>จำนวนคู่ที่แสดง<input id=\"gfxLimit\" type=\"number\" min=\"2\" max=\"30\" value=\"16\"></label>\n<label>เพิ่มโลโก้ (รูปจากเครื่อง)<input type=\"file\" id=\"gfxLogo\" accept=\"image/png,image/jpeg,image/webp\"></label>\n<div class=\"actions\"><button class=\"btn primary\" id=\"gfxBuild\">สร้างภาพจากรายการ</button><button class=\"btn\" id=\"gfxSave\">บันทึกแบบ</button><button class=\"btn\" id=\"gfxHistory\">ดูแบบที่บันทึก</button></div>\n<div class=\"actions\"><button class=\"btn\" id=\"gfxPNG\">ดาวน์โหลด PNG</button><button class=\"btn\" id=\"gfxPDF\">ดาวน์โหลด PDF</button></div>\n<p role=\"status\" id=\"gfxStatus\"></p><div id=\"gfxSaved\"></div></div>\n<div class=\"card\"><h3>ตัวอย่างโปสเตอร์</h3><p>พาดหัวและข้อมูลการแข่งขันอ้างอิงจากรายการที่เลือก</p>\n<canvas id=\"gfxCanvas\" width=\"1080\" height=\"1920\" style=\"width:100%;height:auto;border-radius:12px;background:#6d0f18;touch-action:none\" aria-label=\"โปสเตอร์ที่สร้าง\"></canvas>\n<p class=\"small\">ไฟล์ส่งออกสร้างจากภาพแคนวาส รองรับอักษรไทยตามฟอนต์ที่อุปกรณ์มี</p></div></div>";
 
 const canvas=$("gfxCanvas"),ctx=canvas.getContext("2d"),say=(x,b=false)=>box("gfxStatus",x,b),toast=(x,kind="success",extra="")=>window.VBC?.notify(x,kind,extra);
 let rows=[],logo=null,tournaments=[],label="",lastData=null;
+let fontsReady=false;
+async function loadThaiFonts(){
+ if(!fontsReady){try{
+  await Promise.all([
+    document.fonts.load("700 66px Anuphan","กีฬาไทย"),
+    document.fonts.load("700 66px Kanit","การแข่งขันวอลเลย์บอล"),
+    document.fonts.load("500 29px Prompt","ประเทศไทย")
+  ]);
+  await document.fonts.ready;fontsReady=true;
+ }catch(e){console.warn("Font fallback:",e)}}
+ paint();
+}
+function titleFont(){return $("gfxFont")?.value||"Anuphan"}
 const palettes={red:["#6b101b","#200a17","#edbd63"],blue:["#123662","#07142b","#ffca78"],black:["#232323","#080808","#d7bd85"]};
-function measureLine(text,maxWidth,size){ctx.font="bold "+size+"px system-ui,sans-serif";let s=String(text);while(s.length>1&&ctx.measureText(s).width>maxWidth)s=s.slice(0,-2)+"…";return s}
+function measureLine(text,maxWidth,size){
+ ctx.font="700 "+size+"px "+titleFont()+",Prompt,sans-serif";
+ const segments=typeof Intl!=="undefined"&&Intl.Segmenter?
+  [...new Intl.Segmenter("th",{granularity:"grapheme"}).segment(String(text))].map(x=>x.segment):Array.from(String(text));
+ let out=segments.join("");
+ while(segments.length>1&&ctx.measureText(out).width>maxWidth){segments.pop();out=segments.join("")+"…"}
+ return out;
+}
 function paint(){
  const W=1080,H=$("gfxSize").value==="square"?1080:1920;canvas.width=W;canvas.height=H;
  const [a,b,gold]=palettes[$("gfxTheme").value],gradient=ctx.createLinearGradient(0,0,W,H);
  gradient.addColorStop(0,a);gradient.addColorStop(1,b);ctx.fillStyle=gradient;ctx.fillRect(0,0,W,H);
  ctx.save();ctx.globalAlpha=.12;ctx.strokeStyle=gold;ctx.lineWidth=8;for(let i=-5;i<16;i++){ctx.beginPath();ctx.moveTo(-100+i*120,0);ctx.lineTo(300+i*120,H);ctx.stroke()}ctx.restore();
  ctx.strokeStyle=gold;ctx.lineWidth=8;ctx.strokeRect(36,36,W-72,H-72);
- ctx.fillStyle=gold;ctx.textAlign="center";ctx.font="900 48px system-ui";ctx.fillText("การแข่งขันวอลเลย์บอล",W/2,105);
+ ctx.fillStyle=gold;ctx.textAlign="center";ctx.font="700 48px Kanit,Prompt,sans-serif";ctx.fillText("การแข่งขันวอลเลย์บอล",W/2,105);
  if(logo){const scale=Math.min(170/logo.width,170/logo.height);ctx.drawImage(logo,W/2-logo.width*scale/2,124,logo.width*scale,logo.height*scale);}
  ctx.fillStyle="#fff7ef";let header=$("gfxTitle").value||"โปรแกรมการแข่งขันวอลเลย์บอล";
- ctx.font="900 66px system-ui,sans-serif";ctx.fillText(measureLine(header,990,66),W/2,logo?365:255);
- ctx.font="500 29px system-ui,sans-serif";ctx.fillStyle="#ffe0a8";ctx.fillText(measureLine($("gfxSubtitle").value,1000,29),W/2,logo?420:310);
+ ctx.font="700 66px "+titleFont()+",Prompt,sans-serif";ctx.fillText(measureLine(header,990,66),W/2,logo?365:255);
+ ctx.font="500 29px Prompt,sans-serif";ctx.fillStyle="#ffe0a8";ctx.fillText(measureLine($("gfxSubtitle").value,1000,29),W/2,logo?420:310);
  const start=logo?495:390,foot=H-160,available=foot-start,count=Math.min(rows.length,Number($("gfxLimit").value)||16,30);
  const line=Math.min(91,Math.max(35,available/Math.max(1,count)));
  const font=Math.max(18,Math.min(31,line*.37));
- ctx.textAlign="left";ctx.fillStyle=gold;ctx.font="700 27px system-ui";
+ ctx.textAlign="left";ctx.fillStyle=gold;ctx.font="700 27px Anuphan,Prompt,sans-serif";
  ctx.fillText(label||"รายการแข่งขัน",75,start-38);
  for(let i=0;i<count;i++){
   const y=start+i*line;
   ctx.fillStyle=i%2?"#ffffff12":"#ffffff20";ctx.fillRect(65,y,950,line-6);
-  ctx.fillStyle="#fff";ctx.font="700 "+font+"px system-ui,sans-serif";
+  ctx.fillStyle="#fff";ctx.font="700 "+font+"px Anuphan,Prompt,sans-serif";
   ctx.fillText(String(i+1).padStart(2,"0"),82,y+line*.62);
   const r=rows[i],left=measureLine(r.a,390,font),right=measureLine(r.b,390,font);
   ctx.fillText(left,170,y+line*.62);
-  ctx.fillStyle=gold;ctx.font="900 "+font+"px system-ui";ctx.fillText("พบ",555,y+line*.62);
-  ctx.textAlign="right";ctx.fillStyle="#fff";ctx.font="700 "+font+"px system-ui";ctx.fillText(right,1010,y+line*.62);ctx.textAlign="left";
+  ctx.fillStyle=gold;ctx.font="700 "+font+"px Kanit,Prompt,sans-serif";ctx.fillText("พบ",555,y+line*.62);
+  ctx.textAlign="right";ctx.fillStyle="#fff";ctx.font="700 "+font+"px Anuphan,Prompt,sans-serif";ctx.fillText(right,1010,y+line*.62);ctx.textAlign="left";
  }
  ctx.fillStyle=gold;ctx.fillRect(90,H-135,900,2);
- ctx.fillStyle="#f9dcc4";ctx.textAlign="center";ctx.font="500 22px system-ui";ctx.fillText("สร้างจากข้อมูลการแข่งขัน",W/2,H-89);
+ ctx.fillStyle="#f9dcc4";ctx.textAlign="center";ctx.font="500 22px Prompt,sans-serif";ctx.fillText("สร้างจากข้อมูลการแข่งขัน",W/2,H-89);
 }
 async function tournamentsLoad(){
  try{tournaments=await owned();opt($("gfxTournament"),tournaments.map(x=>({value:x.id,label:x.name})),"เลือกรายการ");say("พบรายการแข่งขัน "+tournaments.length+" รายการ");paint()}
@@ -59,16 +79,16 @@ async function build(){
  }catch(e){say(e.message||"โหลดข้อมูลไม่สำเร็จ",true)}
 }
 $("gfxBuild").onclick=build;
-for(const id of ["gfxTitle","gfxSubtitle","gfxTheme","gfxSize","gfxLimit","gfxType"])$(id).addEventListener("input",paint);
+for(const id of ["gfxTitle","gfxSubtitle","gfxTheme","gfxSize","gfxLimit","gfxType","gfxFont"])$(id).addEventListener("input",paint);
 $("gfxLogo").onchange=async e=>{
  const f=e.target.files?.[0];if(!f)return;
  if(f.size>3e6){say("โลโก้ต้องเล็กกว่า 3 MB",true);return}
  const uri=URL.createObjectURL(f),image=new Image();image.onload=()=>{logo=image;URL.revokeObjectURL(uri);paint()};image.onerror=()=>{URL.revokeObjectURL(uri);say("เปิดภาพไม่ได้",true)};image.src=uri;
 };
 function filename(ext){return "valley-ball-poster-"+new Date().toISOString().slice(0,10)+"."+ext}
-$("gfxPNG").onclick=()=>canvas.toBlob(blob=>{if(blob){downloadBlob(blob,filename("png"));toast("ดาวน์โหลดภาพ PNG แล้ว")}else{say("ส่งออกไม่ได้",true);toast("ส่งออก PNG ไม่สำเร็จ","error") }},"image/png");
+$("gfxPNG").onclick=async()=>{await loadThaiFonts();canvas.toBlob(blob=>{if(blob){downloadBlob(blob,filename("png"));toast("ดาวน์โหลดภาพ PNG แล้ว")}else{say("ส่งออกไม่ได้",true);toast("ส่งออก PNG ไม่สำเร็จ","error") }},"image/png")};
 $("gfxPDF").onclick=async()=>{
- say("กำลังสร้าง PDF...");
+ say("กำลังสร้าง PDF...");await loadThaiFonts();
  try{const {jsPDF}=await import("https://esm.sh/jspdf@2.5.2");
  const portrait=$("gfxSize").value!=="square";
  const doc=new jsPDF({orientation:"portrait",unit:"mm",format:portrait?[210,373.33]:[210,210],compress:true});
@@ -104,3 +124,5 @@ $("gfxHistory").onclick=async()=>{
 $("gfxReload").onclick=tournamentsLoad;
 db.auth.onAuthStateChange(()=>setTimeout(()=>tournamentsLoad().catch(e=>say(e.message,true)),0));
 tournamentsLoad();
+
+loadThaiFonts();

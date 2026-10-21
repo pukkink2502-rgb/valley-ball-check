@@ -25,7 +25,7 @@ test('official court is primary view and set-based direct entry',()=>{
  assert.ok(!html.includes('<script src="position-check.js"'));
 });
 test('draw wheel has separate order and grouping stages',()=>{
- for(const name of ['wheelDisc','drawStart','drawSpin','start_draw_steps','draw_one_step','drawOrderStage','drawGroupStage'])assert.ok(draw.includes(name),name);
+ for(const name of ['wheelDisc','drawStart','drawSpin','start_standalone_draw','standalone_draw_step','drawOrderStage','drawGroupStage','drawGroupCards','save_standalone_draw','rename_draw_team'])assert.ok(draw.includes(name),name);
 });
 test('public schedule uses match picker, not UUID entry',()=>{
  assert.ok(publicUI.includes('pubMatchPick'));
@@ -35,4 +35,26 @@ test('graphics and UI typography use Thai',()=>{
  assert.ok(gfx.includes('สร้างกราฟิกการแข่งขัน'));
  assert.ok(gfx.includes('สร้างจากข้อมูลการแข่งขัน'));
  assert.ok(read('design.css').includes('font-family:"Prompt"'));
+});
+
+test('court point workflow: choosing service, sideout rotation and jersey-only substitutions',()=>{
+ for(const x of ['offStartServeA','offStartServeB','offServeInfo','number_substitution',
+ 'configure_set_libero','toggle_set_libero','offLiberoNumberA','offLiberoNumberB',
+ 'offLiberoReplaceA','offLiberoReplaceB','services','liberos']){
+  assert.ok(official.includes(x),x);
+ }
+ assert.ok(!official.includes('command("rotation"'));
+});
+test('standalone draw is created from team names and saved after group cards are complete',()=>{
+ for(const x of ['drawNames','drawGroupCount','drawGroupCards','drawFinalTitle','drawCommit',
+ 'save_standalone_draw','standalone_draw_snapshot']){
+  assert.ok(draw.includes(x),x);
+ }
+ assert.ok(draw.includes('group.position')||draw.includes('e.position'));
+ assert.ok(!draw.includes('run_tournament_draw'));
+});
+test('graphics canvas explicitly loads Thai fonts before export',()=>{
+ for(const x of ['document.fonts.load','loadThaiFonts','gfxFont','Anuphan','Kanit','Prompt']){
+  assert.ok(gfx.includes(x),x);
+ }
 });
