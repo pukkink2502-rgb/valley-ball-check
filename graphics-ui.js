@@ -56,6 +56,73 @@ function paint(){
  ctx.fillStyle=gold;ctx.fillRect(90,H-135,900,2);
  ctx.fillStyle="#f9dcc4";ctx.textAlign="center";ctx.font="500 22px Prompt,sans-serif";ctx.fillText("สร้างจากข้อมูลการแข่งขัน",W/2,H-89);
 }
+
+function resultLogo(image,x,y,radius,gold){
+ ctx.fillStyle="#ffffff1f";ctx.strokeStyle=gold;ctx.lineWidth=5;
+ ctx.beginPath();ctx.arc(x,y,radius,0,2*Math.PI);ctx.fill();ctx.stroke();
+ if(!image){ctx.fillStyle="#fff9";ctx.font="500 22px Anuphan,Prompt,sans-serif";
+ ctx.textAlign="center";ctx.fillText("โลโก้",x,y+8);return}
+ const r=Math.min(radius*1.7/image.width,radius*1.7/image.height);
+ ctx.drawImage(image,x-image.width*r/2,y-image.height*r/2,image.width*r,image.height*r);
+}
+function paintResultCard(H,gold){
+ ctx.textAlign="center";
+ if(!selectedResult){ctx.fillStyle="#fff";ctx.font="700 40px Anuphan,Prompt,sans-serif";
+ ctx.fillText("เลือกคู่ที่มีผลการแข่งขันก่อน",540,H*.58,960);return}
+ const m=selectedResult,compact=H===1080,top=compact?385:540;
+ ctx.fillStyle="#ffffff14";ctx.fillRect(70,top-70,940,compact?530:720);
+ resultLogo(logoA,285,top+83,compact?75:108,gold);
+ resultLogo(logoB,795,top+83,compact?75:108,gold);
+ ctx.fillStyle="#fff";ctx.font="700 "+(compact?43:52)+"px Anuphan,Prompt,sans-serif";
+ ctx.fillText(m.team_a,285,top+(compact?202:250),420);
+ ctx.fillText(m.team_b,795,top+(compact?202:250),420);
+ ctx.fillStyle=gold;ctx.font="700 "+(compact?98:143)+"px Kanit,Prompt,sans-serif";
+ ctx.fillText(m.score_a+" : "+m.score_b,540,top+(compact?312:430),720);
+ ctx.fillStyle="#fff";ctx.font="500 "+(compact?27:35)+"px Anuphan,Prompt,sans-serif";
+ ctx.fillText("ผลการแข่งขัน (จำนวนเซตที่ชนะ)",540,top+(compact?359:480));
+ const scores=(m.sets||[]).filter(x=>x.status==="complete").map(x=>x.a+"–"+x.b).join("   |   ");
+ ctx.fillText(scores||"ยังไม่มีคะแนนรายเซต",540,top+(compact?400:542),915);
+ ctx.fillStyle=gold;ctx.font="700 "+(compact?32:45)+"px Anuphan,Prompt,sans-serif";
+ ctx.fillText("🏆 ผู้ชนะ: "+(m.winner||"ยังไม่สรุป"),540,top+(compact?467:622),920);
+ if(m.status!=="approved"){ctx.fillStyle="#ffdcba";ctx.font="600 25px Anuphan,Prompt,sans-serif";
+ ctx.fillText("ภาพร่าง · ผลยังไม่ปิดอย่างเป็นทางการ",540,top+(compact?507:675),920)}
+ ctx.fillStyle=gold;ctx.fillRect(90,H-135,900,2);
+ ctx.fillStyle="#f9dcc4";ctx.font="500 22px Prompt,sans-serif";
+ ctx.fillText("ภาพผลการแข่งขันจากข้อมูลที่บันทึกไว้",540,H-90);
+}
+async function loadLocalTeamLogo(id,side){
+ const file=$(id).files?.[0];if(!file)return;
+ if(file.size>3e6){toast("โลโก้ใหญ่เกิน 3 MB","error");return}
+ const url=URL.createObjectURL(file),im=new Image();
+ im.onload=()=>{if(side==="a")logoA=im;else logoB=im;URL.revokeObjectURL(url);paint()};
+ im.onerror=()=>{URL.revokeObjectURL(url);toast("อ่านภาพโลโก้ไม่ได้","error")};
+ im.src=url;
+}
+$("gfxLogoA").onchange=()=>loadLocalTeamLogo("gfxLogoA","a");
+$("gfxLogoB").onchange=()=>loadLocalTeamLogo("gfxLogoB","b");
+function graphicsMode(){
+ const result=$("gfxType").value==="results";$("gfxResultControls").hidden=!result;
+ $("gfxLimit").closest("label").hidden=result;paint();
+}
+async function selectedGraphicResult(clearLogos=true){
+ const match=resultMatches.find(x=>x.id===$("gfxResultMatch").value);
+ if(clearLogos){logoA=null;logoB=null;$("gfxLogoA").value="";$("gfxLogoB").value=""}
+ if(!match){selectedResult=null;paint();return}
+ const {data:sets,error}=await db.from("match_sets").select("set_number,points_a,points_b,status")
+ .eq("match_id",match.id).order("set_number");
+ if(error)throw error;
+ const a=resultNames.get(match.team_a_id)||"ทีม A",b=resultNames.get(match.team_b_id)||"ทีม B";
+ const aa=Number(match.score_a_sets)||0,bb=Number(match.score_b_sets)||0;
+ selectedResult={match_id:match.id,team_a:a,team_b:b,score_a:aa,score_b:bb,
+ winner:aa>bb?a:bb>aa?b:null,status:match.status,
+ sets:(sets||[]).map(s=>({set:s.set_number,a:s.points_a,b:s.points_b,status:s.status}))};
+ lastData={tournament_id:$("gfxTournament").value,type:"results",rows:[],result:selectedResult,created_at:new Date().toISOString()};
+ label=tournaments.find(x=>x.id===$("gfxTournament").value)?.name||"ผลการแข่งขัน";
+ paint();say("แสดงผล "+a+" พบ "+b+" · "+aa+" : "+bb);
+}
+$("gfxResultMatch").onchange=()=>selectedGraphicResult().catch(e=>{say(e.message,true);toast("เปิดผลไม่ได้","error",e.message)});
+$("gfxRefreshResult").onclick=()=>selectedGraphicResult(false).then(()=>toast("โหลดคะแนนล่าสุดแล้ว")).catch(e=>toast("โหลดผลไม่สำเร็จ","error",e.message));
+
 async function tournamentsLoad(){
  try{tournaments=await owned();opt($("gfxTournament"),tournaments.map(x=>({value:x.id,label:x.name})),"เลือกรายการ");say("พบรายการแข่งขัน "+tournaments.length+" รายการ");paint()}
  catch(e){say(e.message,true);paint()}
