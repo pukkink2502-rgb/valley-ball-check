@@ -28,3 +28,16 @@ Status: **development preview**, not production. Branch `development/v0.1`.
 Supabase ref: `rwnvlxwdorsrxjuepcxp`
 Branch: `development/v0.1`
 Production main: unchanged.
+
+
+## 2026-10-21 — Tournament management and retention update
+
+- Database migration `tournament_draft_atomic_builder_v04` applied.
+- Authenticated RPC `public.create_tournament_draft` creates tournament, stage, A–D pools, teams, registrations and round-robin matches in one database transaction.
+- New RLS policies allow only tournament owners to insert drafts, pool memberships and unapproved scheduled fixtures.
+- Anonymous users cannot execute the tournament creation function (verified with Postgres privilege query).
+- Authenticated users can execute it; full sign-up/login and end-to-end creation still require browser testing.
+- `tournament-manager.js` and the new "จัดการแข่งขันออนไลน์" page use Supabase Auth and the RPC. All rendered team names use DOM `textContent`.
+- New pg_cron job `vbc_guest_retention_cleanup_daily` is active and removes expired guest sessions and stale guest creation-rate records; cascading FKs remove guest events.
+- Supabase read-back verified one active cron job, and existing user guest sessions left untouched.
+- WARNING: Vercel preview READY is a build/deployment status, **not** proof of completed real-browser or cross-device functionality.
