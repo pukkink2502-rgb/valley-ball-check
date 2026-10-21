@@ -58,3 +58,18 @@ test('graphics canvas explicitly loads Thai fonts before export',()=>{
   assert.ok(gfx.includes(x),x);
  }
 });
+
+test('scoresheet is downloadable as Thai PDF, printable, and signable by one officer',()=>{
+ const report=read('scoresheet-report.js');
+ for(const x of ['offReportPanel','offDownloadPdf','offPrintPdf','offOfficialName','offSignatureCanvas',
+ 'offApprove','downloadScoresheet','printScoresheet'])assert.ok(official.includes(x),x);
+ for(const x of ['makeScoresheetDocument','doc.addImage','รายงานผลการแข่งขันวอลเลย์บอล','ลายมือชื่อเจ้าหน้าที่',
+ 'result_finalized'])assert.ok(report.includes(x),x);
+ assert.ok(official.includes('p_note:$("offOfficialName").value.trim()'));
+ assert.ok(!official.includes('รับรองโดยเจ้าหน้าที่อิสระ'));
+});
+test('graphics selected result uses completed match scores, not schedule VS rows',()=>{
+ for(const x of ['gfxResultControls','gfxResultMatch','gfxLogoA','gfxLogoB','selectedGraphicResult',
+ 'paintResultCard','winner','match_sets','score_a_sets','score_b_sets'])
+ assert.ok(gfx.includes(x),x);
+});
