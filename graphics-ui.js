@@ -101,4 +101,6 @@ $("gfxHistory").onclick=async()=>{
  }
  say("โหลดแบบที่บันทึก "+data.length+" รายการ");
 };
+$("gfxReload").onclick=tournamentsLoad;
+db.auth.onAuthStateChange(()=>setTimeout(()=>tournamentsLoad().catch(e=>say(e.message,true)),0));
 tournamentsLoad();
