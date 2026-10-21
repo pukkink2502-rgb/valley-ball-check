@@ -139,8 +139,8 @@ $("offSaveRoster").onclick=async()=>{
   const [number,name,kind]=x.split(",").map(a=>a?.trim());return {number,name,libero:kind?.toUpperCase()==="L"};
  });
  if(!entries.length||entries.some(x=>!x.number||!x.name))return notify("กรอกทะเบียนไม่ถูกต้อง","error","รูปแบบ: เบอร์,ชื่อ และ ,L สำหรับ Libero");
- if(!confirm("บันทึกทะเบียนใหม่? รายชื่อทะเบียนเดิมของทีมนี้จะถูกแทนที่"))return;
- try{await api("official_match_roster",{p_match:cur.id,p_team:t,p_players:entries});await openMatch(cur.id,true);notify("บันทึกทะเบียนสำเร็จ")}
+ if(!confirm("บันทึกหรืออัปเดตชื่อผู้เล่นในทะเบียน? หมายเลขเดิมจะได้รับการรักษาไว้"))return;
+ try{await api("merge_match_roster",{p_match:cur.id,p_team:t,p_players:entries});await openMatch(cur.id,true);notify("บันทึกทะเบียนสำเร็จ")}
  catch(e){notify("บันทึกทะเบียนไม่สำเร็จ","error",e.message)}
 };
 $("offAssign").onclick=async()=>{
