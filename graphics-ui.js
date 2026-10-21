@@ -163,7 +163,12 @@ async function build(){
 }
 $("gfxBuild").onclick=build;
 for(const id of ["gfxTitle","gfxSubtitle","gfxTheme","gfxSize","gfxLimit","gfxFont"])$(id).addEventListener("input",paint);
-$("gfxType").onchange=()=>{graphicsMode();if($("gfxTournament").value)build()};
+$("gfxType").onchange=()=>{
+ const title=$("gfxTitle");
+ if(["โปรแกรมการแข่งขันวอลเลย์บอล","ผลการแข่งขันวอลเลย์บอล"].includes(title.value))
+  title.value=$("gfxType").value==="results"?"ผลการแข่งขันวอลเลย์บอล":"โปรแกรมการแข่งขันวอลเลย์บอล";
+ graphicsMode();if($("gfxTournament").value)build();
+};
 $("gfxLogo").onchange=async e=>{
  const f=e.target.files?.[0];if(!f)return;
  if(f.size>3e6){say("โลโก้ต้องเล็กกว่า 3 MB",true);return}
