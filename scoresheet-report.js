@@ -68,10 +68,7 @@ function sheet(snapshot,{name="",signature=null}={}){
  txt(c,"ประวัติสำคัญ: "+events.length+" รายการ (รายละเอียดหน้าถัดไป)",85,1390,22,false,COLORS.muted);
  line(c,85,1420,1040);
  txt(c,"ผู้บันทึก / เจ้าหน้าที่: "+(name||snapshot.official_name||"........................................................"),85,1462,23,true);
- if(signature){
-  const im=new Image();im.src=signature;
-  try{c.drawImage(im,670,1444,380,110)}catch{/* a blank signing line remains */}
- }
+ if(signature){try{c.drawImage(signature,670,1444,380,110)}catch{/* blank signing line remains */}}
  line(c,670,1580,420);
  txt(c,"ลายมือชื่อเจ้าหน้าที่ (เซ็นบนกระดาษหรือบนหน้าจอ)",670,1610,18,false,COLORS.muted);
  finish(p,1);
@@ -103,6 +100,10 @@ export async function makeScoresheetDocument(snapshot,options={}){
  if(document.fonts){
   await Promise.allSettled([document.fonts.load("700 48px Prompt","รายงานการแข่งขัน"),
    document.fonts.load("500 25px Anuphan","คะแนนรวม")]);await document.fonts.ready;
+ }
+ if(options.signature){const image=new Image();image.src=options.signature;
+  try{await image.decode();options={...options,signature:image}}
+  catch{options={...options,signature:null}}
  }
  const pages=sheet(snapshot,options);
  const {jsPDF}=await import("https://esm.sh/jspdf@2.5.2");
