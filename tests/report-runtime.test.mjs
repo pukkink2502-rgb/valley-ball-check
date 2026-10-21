@@ -22,7 +22,7 @@ test('landscape score document renders match summary and per-set sheets from act
   sets:[{set:1,a:25,b:12,status:'complete'},{set:2,a:27,b:25,status:'complete'}],
   events:Array.from({length:25},(_,i)=>({seq:i+1,set:1,event:'point',payload:{team:0},at:'2026-10-21T09:00:00Z'})),
   roster:[],lineups:[],services:[{set:1,first_team_id:'a'}],court_sides:[{set:1,left_team_id:'b'}],
-  official_name:'กรรมการ';
+  official_name:'กรรมการ'};
  };
  const images=await createScoresheetPreviewImages(snapshot,{name:'กรรมการ'});
  assert.equal(images.length,3);
